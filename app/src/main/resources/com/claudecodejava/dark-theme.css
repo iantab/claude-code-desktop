@@ -1,0 +1,369 @@
+/* ===== Root ===== */
+.root {
+    -fx-background-color: #1e1e2e;
+    -fx-font-family: 'Cascadia Mono', 'Cascadia Code', 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+    -fx-font-size: 13px;
+}
+
+.main-window {
+    -fx-background-color: #1e1e2e;
+}
+
+/* ===== Chat Scroll Area ===== */
+.chat-scroll {
+    -fx-background-color: #1e1e2e;
+    -fx-background: #1e1e2e;
+    -fx-border-color: transparent;
+}
+
+.chat-scroll .viewport {
+    -fx-background-color: #1e1e2e;
+}
+
+.chat-scroll .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 8px;
+}
+
+.chat-scroll .scroll-bar:vertical .thumb {
+    -fx-background-color: #444;
+    -fx-background-radius: 4px;
+}
+
+.chat-scroll .scroll-bar:vertical .track {
+    -fx-background-color: transparent;
+}
+
+.chat-scroll .scroll-bar:vertical .increment-button,
+.chat-scroll .scroll-bar:vertical .decrement-button {
+    -fx-pref-height: 0;
+    -fx-padding: 0;
+}
+
+.messages-box {
+    -fx-background-color: #1e1e2e;
+}
+
+/* ===== Message Cells ===== */
+.message-cell {
+    -fx-background-color: transparent;
+    -fx-background-radius: 8px;
+    -fx-padding: 8 16 8 16;
+}
+
+.user-message {
+    -fx-background-color: #2a2a3e;
+    -fx-background-radius: 8px;
+}
+
+.assistant-message {
+    -fx-background-color: transparent;
+}
+
+/* ===== Role Labels ===== */
+.role-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+    -fx-padding: 0 0 4 0;
+}
+
+.user-role {
+    -fx-text-fill: #89b4fa;
+}
+
+.assistant-role {
+    -fx-text-fill: #a6e3a1;
+}
+
+/* ===== User Text ===== */
+.user-text {
+    -fx-text-fill: #cdd6f4;
+    -fx-font-size: 13px;
+}
+
+/* ===== Assistant Text ===== */
+.assistant-text {
+    -fx-text-fill: #cdd6f4;
+    -fx-font-size: 13px;
+    -fx-line-spacing: 2;
+}
+
+/* ===== Welcome Label ===== */
+.welcome-label {
+    -fx-text-fill: #6c7086;
+    -fx-font-size: 16px;
+    -fx-alignment: center;
+    -fx-padding: 40 20 20 20;
+}
+
+/* ===== System Messages ===== */
+.system-message {
+    -fx-font-size: 12px;
+    -fx-font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+    -fx-padding: 4 16 4 16;
+}
+
+.tool-use-message {
+    -fx-text-fill: #89b4fa;
+}
+
+.error-message {
+    -fx-text-fill: #f38ba8;
+}
+
+.system-info {
+    -fx-text-fill: #6c7086;
+}
+
+/* ===== Input Area ===== */
+.input-area {
+    -fx-background-color: #181825;
+    -fx-border-color: #313244;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 12 16 12 16;
+}
+
+.input-textarea {
+    -fx-background-color: #2a2a3e;
+    -fx-text-fill: #cdd6f4;
+    -fx-prompt-text-fill: #6c7086;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 8;
+    -fx-font-size: 13px;
+}
+
+.input-textarea:focused {
+    -fx-border-color: #89b4fa;
+}
+
+.input-textarea .content {
+    -fx-background-color: #2a2a3e;
+    -fx-background-radius: 8px;
+}
+
+/* ===== Buttons ===== */
+.send-button {
+    -fx-background-color: #89b4fa;
+    -fx-text-fill: #1e1e2e;
+    -fx-font-weight: bold;
+    -fx-padding: 8 20 8 20;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.send-button:hover {
+    -fx-background-color: #b4d0fb;
+}
+
+.send-button:disabled {
+    -fx-background-color: #45475a;
+    -fx-text-fill: #6c7086;
+}
+
+.cancel-button {
+    -fx-background-color: #f38ba8;
+    -fx-text-fill: #1e1e2e;
+    -fx-font-weight: bold;
+    -fx-padding: 8 20 8 20;
+    -fx-background-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.cancel-button:hover {
+    -fx-background-color: #f5a0b8;
+}
+
+.new-session-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #6c7086;
+    -fx-padding: 8 16 8 16;
+    -fx-background-radius: 8px;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.new-session-button:hover {
+    -fx-background-color: #2a2a3e;
+    -fx-text-fill: #cdd6f4;
+}
+
+/* ===== Toolbar ===== */
+.toolbar {
+    -fx-background-color: #181825;
+    -fx-border-color: #313244;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 8 16 8 16;
+}
+
+.toolbar-label {
+    -fx-text-fill: #a6adc8;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.toolbar-separator {
+    -fx-text-fill: #45475a;
+    -fx-padding: 0 4 0 4;
+}
+
+.directory-field {
+    -fx-background-color: #2a2a3e;
+    -fx-text-fill: #cdd6f4;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-padding: 4 8 4 8;
+    -fx-font-size: 12px;
+    -fx-font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+}
+
+.directory-field:focused {
+    -fx-border-color: #89b4fa;
+}
+
+.toolbar-button {
+    -fx-background-color: #45475a;
+    -fx-text-fill: #cdd6f4;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 4px;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}
+
+.toolbar-button:hover {
+    -fx-background-color: #585b70;
+}
+
+.toolbar-combo {
+    -fx-background-color: #2a2a3e;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+    -fx-font-size: 12px;
+}
+
+.toolbar-combo .list-cell {
+    -fx-text-fill: #cdd6f4;
+    -fx-background-color: #2a2a3e;
+    -fx-font-size: 12px;
+}
+
+.toolbar-combo .combo-box-popup .list-view {
+    -fx-background-color: #2a2a3e;
+    -fx-border-color: #45475a;
+}
+
+.toolbar-combo .combo-box-popup .list-view .list-cell {
+    -fx-text-fill: #cdd6f4;
+    -fx-background-color: #2a2a3e;
+}
+
+.toolbar-combo .combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: #45475a;
+}
+
+.toolbar-combo .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.toolbar-combo .arrow {
+    -fx-background-color: #a6adc8;
+}
+
+.toolbar-combo .text-field {
+    -fx-text-fill: #cdd6f4;
+    -fx-background-color: #2a2a3e;
+    -fx-font-size: 12px;
+}
+
+/* ===== Question View ===== */
+.question-view {
+    -fx-background-color: #2a2a3e;
+    -fx-background-radius: 8px;
+    -fx-border-color: #f9e2af;
+    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+}
+
+.question-text {
+    -fx-text-fill: #f9e2af;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.question-hint {
+    -fx-text-fill: #6c7086;
+    -fx-font-size: 12px;
+    -fx-font-style: italic;
+}
+
+.option-button {
+    -fx-background-color: #313244;
+    -fx-text-fill: #cdd6f4;
+    -fx-font-size: 13px;
+    -fx-padding: 10 16 10 16;
+    -fx-background-radius: 6px;
+    -fx-cursor: hand;
+    -fx-alignment: center-left;
+    -fx-wrap-text: true;
+}
+
+.option-button:hover {
+    -fx-background-color: #45475a;
+}
+
+.option-button:disabled {
+    -fx-opacity: 0.5;
+}
+
+.option-selected {
+    -fx-background-color: #89b4fa;
+    -fx-text-fill: #1e1e2e;
+    -fx-font-weight: bold;
+    -fx-opacity: 1.0;
+}
+
+.approve-button {
+    -fx-background-color: #313244;
+    -fx-text-fill: #a6e3a1;
+    -fx-font-weight: bold;
+}
+
+.approve-button:hover {
+    -fx-background-color: #45475a;
+}
+
+.changes-button {
+    -fx-background-color: #313244;
+    -fx-text-fill: #89b4fa;
+}
+
+.changes-button:hover {
+    -fx-background-color: #45475a;
+}
+
+/* ===== Thinking Indicator ===== */
+.thinking-indicator {
+    -fx-text-fill: #89b4fa;
+    -fx-font-size: 13px;
+    -fx-font-style: italic;
+    -fx-opacity: 0.8;
+}
+
+/* ===== Status Bar ===== */
+.status-bar {
+    -fx-background-color: #11111b;
+    -fx-border-color: #313244;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 4 16 4 16;
+    -fx-min-height: 24px;
+}
+
+.status-item {
+    -fx-text-fill: #6c7086;
+    -fx-font-size: 11px;
+    -fx-font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+}

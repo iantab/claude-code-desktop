@@ -1,0 +1,16 @@
+[versions]
+javafx = "25.0.1"
+jackson = "2.18.3"
+flexmark = "0.64.8"
+junit-jupiter = "6.0.1"
+
+[libraries]
+jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jackson" }
+flexmark-core = { module = "com.vladsch.flexmark:flexmark", version.ref = "flexmark" }
+flexmark-tables = { module = "com.vladsch.flexmark:flexmark-ext-tables", version.ref = "flexmark" }
+flexmark-gfm-strikethrough = { module = "com.vladsch.flexmark:flexmark-ext-gfm-strikethrough", version.ref = "flexmark" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
+
+[plugins]
+javafx = { id = "org.openjfx.javafxplugin", version = "0.1.0" }
+spotless = { id = "com.diffplug.spotless", version = "8.4.0" }
