@@ -96,6 +96,22 @@ public class MessageCell extends VBox {
             });
 
     String html = markdownRenderer.renderToHtml(text);
+
+    // Open links in system browser instead of inside the WebView
+    webView
+        .getEngine()
+        .locationProperty()
+        .addListener(
+            (obs, oldUrl, newUrl) -> {
+              if (newUrl != null && !newUrl.isBlank() && !newUrl.startsWith("data:")) {
+                javafx.application.Platform.runLater(() -> webView.getEngine().loadContent(html));
+                try {
+                  java.awt.Desktop.getDesktop().browse(new java.net.URI(newUrl));
+                } catch (Exception ignored) {
+                }
+              }
+            });
+
     webView.getEngine().loadContent(html);
 
     // Swap the label for the webview
