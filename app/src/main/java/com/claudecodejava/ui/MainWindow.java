@@ -46,6 +46,16 @@ public class MainWindow extends BorderPane {
     toolBar.setOnMcpConfig(this::showMcpConfig);
     toolBar.setOnSessionHistory(this::toggleSessionHistory);
     toolBar.setOnUsage(this::showUsage);
+    toolBar.setOnSettingsChanged(
+        () -> {
+          var tab = getActiveTab();
+          if (tab != null) {
+            syncSettings(tab);
+            String model = toolBar.getModel();
+            String effort = toolBar.getEffort();
+            tab.showSystemMessage("Settings: model=" + model + ", effort=" + effort, "system-info");
+          }
+        });
 
     sessionHistory = new SessionHistoryView(this::resumeSession);
 

@@ -28,6 +28,7 @@ public class ToolBar extends HBox {
   private Runnable onMcpConfig;
   private Runnable onSessionHistory;
   private Runnable onUsage;
+  private Runnable onSettingsChanged;
 
   public ToolBar(String initialDirectory) {
     setSpacing(10);
@@ -61,6 +62,10 @@ public class ToolBar extends HBox {
     modeCombo.getItems().addAll("default", "plan", "acceptEdits", "auto", "bypassPermissions");
     modeCombo.setValue("default");
     modeCombo.getStyleClass().add("toolbar-combo");
+    modeCombo.setOnAction(
+        e -> {
+          if (onSettingsChanged != null) onSettingsChanged.run();
+        });
 
     // Model selector
     var modelLabel = new Label("Model:");
@@ -98,6 +103,7 @@ public class ToolBar extends HBox {
           } else {
             previousModel = modelCombo.getValue();
           }
+          if (onSettingsChanged != null) onSettingsChanged.run();
         });
 
     // Effort level
@@ -108,6 +114,10 @@ public class ToolBar extends HBox {
     effortCombo.getItems().addAll("low", "medium", "high", "max");
     effortCombo.setValue("high");
     effortCombo.getStyleClass().add("toolbar-combo");
+    effortCombo.setOnAction(
+        e -> {
+          if (onSettingsChanged != null) onSettingsChanged.run();
+        });
 
     // Config buttons
     var toolsButton = new Button("Tools");
@@ -199,6 +209,10 @@ public class ToolBar extends HBox {
 
   public void setOnUsage(Runnable onUsage) {
     this.onUsage = onUsage;
+  }
+
+  public void setOnSettingsChanged(Runnable onSettingsChanged) {
+    this.onSettingsChanged = onSettingsChanged;
   }
 
   public boolean isPlanMode() {

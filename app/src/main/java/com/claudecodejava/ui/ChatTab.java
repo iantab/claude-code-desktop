@@ -98,7 +98,17 @@ public class ChatTab extends Tab {
                     if (!name.isBlank()) setText(name);
                   });
         });
-    setContextMenu(new ContextMenu(renameItem));
+    var closeItem = new MenuItem("Close");
+    closeItem.setOnAction(
+        e -> {
+          var tp = getTabPane();
+          // Don't close if it's the last real tab (keep at least 1 besides the "+" tab)
+          if (tp != null && tp.getTabs().size() > 2) {
+            tp.getTabs().remove(this);
+          }
+        });
+
+    setContextMenu(new ContextMenu(renameItem, closeItem));
   }
 
   public SessionManager getSessionManager() {
@@ -107,6 +117,10 @@ public class ChatTab extends Tab {
 
   public void focusInput() {
     inputArea.focus();
+  }
+
+  public void showSystemMessage(String text, String styleClass) {
+    chatView.addSystemMessage(text, styleClass);
   }
 
   /** Load conversation history from a session file and display it in the chat. */
