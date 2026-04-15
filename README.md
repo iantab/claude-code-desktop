@@ -102,7 +102,3 @@ app/src/main/java/com/claudecodejava/
 ## Keywords
 
 claude code desktop, claude code desktop app, claude code gui, claude code java, claude code client, claude desktop alternative, anthropic claude code desktop, claude code native app, fast claude code, lightweight claude code
-
-## License
-
-MIT
