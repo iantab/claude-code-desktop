@@ -7,7 +7,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 /** Input area at the bottom of the chat. Enter to send, Shift+Enter for newline. */
@@ -16,10 +15,8 @@ public class InputArea extends VBox {
   private final TextArea textArea;
   private final Button sendButton;
   private final Button cancelButton;
-  private final Button newSessionButton;
   private Consumer<String> onSend;
   private Runnable onCancel;
-  private Runnable onNewSession;
   private boolean isBusy = false;
 
   public InputArea() {
@@ -30,7 +27,9 @@ public class InputArea extends VBox {
     textArea = new TextArea();
     textArea.setPromptText("Message Claude... (Enter to send, Shift+Enter for newline)");
     textArea.setPrefRowCount(3);
-    textArea.setMaxHeight(120);
+    textArea.setMinHeight(70);
+    textArea.setMaxHeight(70);
+    textArea.setPrefHeight(70);
     textArea.setWrapText(true);
     textArea.getStyleClass().add("input-textarea");
 
@@ -60,18 +59,10 @@ public class InputArea extends VBox {
     cancelButton.setVisible(false);
     cancelButton.setManaged(false);
 
-    newSessionButton = new Button("New Chat");
-    newSessionButton.getStyleClass().add("new-session-button");
-    newSessionButton.setOnAction(
-        e -> {
-          if (onNewSession != null) onNewSession.run();
-        });
-
     var buttonBar = new HBox(8);
     buttonBar.setAlignment(Pos.CENTER_RIGHT);
-    buttonBar.getChildren().addAll(newSessionButton, cancelButton, sendButton);
+    buttonBar.getChildren().addAll(cancelButton, sendButton);
 
-    VBox.setVgrow(textArea, Priority.ALWAYS);
     getChildren().addAll(textArea, buttonBar);
   }
 
@@ -81,10 +72,6 @@ public class InputArea extends VBox {
 
   public void setOnCancel(Runnable onCancel) {
     this.onCancel = onCancel;
-  }
-
-  public void setOnNewSession(Runnable onNewSession) {
-    this.onNewSession = onNewSession;
   }
 
   public void setBusy(boolean busy) {

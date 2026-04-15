@@ -21,8 +21,12 @@ public class ToolBar extends HBox {
   private final TextField directoryField;
   private final ComboBox<String> modeCombo;
   private final ComboBox<String> modelCombo;
+  private final ComboBox<String> effortCombo;
   private String previousModel = "sonnet";
   private Consumer<String> onDirectoryChanged;
+  private Runnable onToolsConfig;
+  private Runnable onMcpConfig;
+  private Runnable onSessionHistory;
 
   public ToolBar(String initialDirectory) {
     setSpacing(10);
@@ -95,6 +99,37 @@ public class ToolBar extends HBox {
           }
         });
 
+    // Effort level
+    var effortLabel = new Label("Effort:");
+    effortLabel.getStyleClass().add("toolbar-label");
+
+    effortCombo = new ComboBox<>();
+    effortCombo.getItems().addAll("low", "medium", "high", "max");
+    effortCombo.setValue("high");
+    effortCombo.getStyleClass().add("toolbar-combo");
+
+    // Config buttons
+    var toolsButton = new Button("Tools");
+    toolsButton.getStyleClass().add("toolbar-button");
+    toolsButton.setOnAction(
+        e -> {
+          if (onToolsConfig != null) onToolsConfig.run();
+        });
+
+    var mcpButton = new Button("MCP");
+    mcpButton.getStyleClass().add("toolbar-button");
+    mcpButton.setOnAction(
+        e -> {
+          if (onMcpConfig != null) onMcpConfig.run();
+        });
+
+    var historyButton = new Button("History");
+    historyButton.getStyleClass().add("toolbar-button");
+    historyButton.setOnAction(
+        e -> {
+          if (onSessionHistory != null) onSessionHistory.run();
+        });
+
     getChildren()
         .addAll(
             dirLabel,
@@ -104,8 +139,15 @@ public class ToolBar extends HBox {
             modelLabel,
             modelCombo,
             createSeparator(),
+            effortLabel,
+            effortCombo,
+            createSeparator(),
             modeLabel,
-            modeCombo);
+            modeCombo,
+            createSeparator(),
+            toolsButton,
+            mcpButton,
+            historyButton);
   }
 
   public void setOnDirectoryChanged(Consumer<String> onDirectoryChanged) {
@@ -128,6 +170,22 @@ public class ToolBar extends HBox {
     String val = modelCombo.getValue();
     if (val == null || val.isBlank() || CUSTOM_OPTION.equals(val)) return null;
     return val.trim();
+  }
+
+  public String getEffort() {
+    return effortCombo.getValue();
+  }
+
+  public void setOnToolsConfig(Runnable onToolsConfig) {
+    this.onToolsConfig = onToolsConfig;
+  }
+
+  public void setOnMcpConfig(Runnable onMcpConfig) {
+    this.onMcpConfig = onMcpConfig;
+  }
+
+  public void setOnSessionHistory(Runnable onSessionHistory) {
+    this.onSessionHistory = onSessionHistory;
   }
 
   public boolean isPlanMode() {

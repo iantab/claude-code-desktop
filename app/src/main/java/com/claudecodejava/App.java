@@ -1,6 +1,5 @@
 package com.claudecodejava;
 
-import com.claudecodejava.cli.SessionManager;
 import com.claudecodejava.ui.MainWindow;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -10,11 +9,13 @@ public class App extends Application {
 
   @Override
   public void start(Stage primaryStage) {
-    var sessionManager = new SessionManager();
-    var mainWindow = new MainWindow(sessionManager);
+    String initialDir = System.getProperty("user.dir");
+    var mainWindow = new MainWindow(initialDir);
 
-    var scene = new Scene(mainWindow, 900, 700);
+    var scene = new Scene(mainWindow, 1100, 750);
     scene.getStylesheets().add(getClass().getResource("dark-theme.css").toExternalForm());
+
+    mainWindow.setupKeyboardShortcuts();
 
     primaryStage.setTitle("Claude Code Java");
     primaryStage.setScene(scene);

@@ -1,177 +1,176 @@
 package com.claudecodejava.ui;
 
-import com.claudecodejava.cli.ClaudeProcess;
-import com.claudecodejava.cli.SessionManager;
 import com.claudecodejava.cli.StreamEvent;
+import java.util.List;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
-/** Main application window: toolbar + chat view + input area + status bar. */
+/** Main application window: toolbar + tabbed chat sessions. */
 public class MainWindow extends BorderPane {
 
   private final ToolBar toolBar;
-  private final ChatView chatView;
-  private final InputArea inputArea;
-  private final StatusBar statusBar;
-  private final SessionManager sessionManager;
-  private ClaudeProcess currentProcess;
-  private boolean assistantStarted = false;
+  private final TabPane tabPane;
 
-  public MainWindow(SessionManager sessionManager) {
-    this.sessionManager = sessionManager;
+  private List<String> allowedTools = List.of();
+  private List<String> disallowedTools = List.of();
+  private String mcpConfigPath = null;
+  private SessionHistoryView sessionHistory;
+  private boolean historyVisible = false;
+
+  public MainWindow(String initialDirectory) {
     getStyleClass().add("main-window");
 
-    chatView = new ChatView();
-    VBox.setVgrow(chatView, Priority.ALWAYS);
+    tabPane = new TabPane();
+    tabPane.getStyleClass().add("chat-tab-pane");
+    VBox.setVgrow(tabPane, Priority.ALWAYS);
 
-    inputArea = new InputArea();
-    inputArea.setOnSend(this::handleSend);
-    inputArea.setOnCancel(this::handleCancel);
-    inputArea.setOnNewSession(this::handleNewSession);
+    // "+" tab to create new tabs
+    var addTab = new Tab("+");
+    addTab.setClosable(false);
+    addTab.getStyleClass().add("add-tab");
+    tabPane.getTabs().add(addTab);
 
-    statusBar = new StatusBar();
-
-    // InputArea + StatusBar stacked at the bottom
-    var bottomPane = new VBox(inputArea, statusBar);
-
-    toolBar = new ToolBar(sessionManager.getWorkingDirectory());
+    toolBar = new ToolBar(initialDirectory);
     toolBar.setOnDirectoryChanged(
         dir -> {
-          sessionManager.setWorkingDirectory(dir);
-          sessionManager.newSession();
-          chatView.clear();
+          var tab = getActiveTab();
+          if (tab != null) tab.updateDirectory(dir);
         });
+    toolBar.setOnToolsConfig(this::showToolConfig);
+    toolBar.setOnMcpConfig(this::showMcpConfig);
+    toolBar.setOnSessionHistory(this::toggleSessionHistory);
+
+    sessionHistory = new SessionHistoryView(this::resumeSession);
+
+    // Tab selection listener (must be after toolBar init)
+    tabPane
+        .getSelectionModel()
+        .selectedItemProperty()
+        .addListener(
+            (obs, oldTab, newTab) -> {
+              if (newTab == addTab) {
+                addNewTab(initialDirectory);
+              } else if (newTab instanceof ChatTab ct) {
+                toolBar.setDirectory(ct.getSessionManager().getWorkingDirectory());
+              }
+            });
 
     setTop(toolBar);
-    setCenter(chatView);
-    setBottom(bottomPane);
+    setCenter(tabPane);
+
+    // Create first tab
+    addNewTab(initialDirectory);
+  }
+
+  public ToolBar getToolBar() {
+    return toolBar;
   }
 
   public void focusInput() {
-    inputArea.focus();
+    var tab = getActiveTab();
+    if (tab != null) tab.focusInput();
   }
 
-  private void handleSend(String message) {
-    sessionManager.setWorkingDirectory(toolBar.getDirectory());
+  /** Set up keyboard shortcuts on the scene. Call after scene is set. */
+  public void setupKeyboardShortcuts() {
+    var scene = getScene();
+    if (scene == null) return;
 
-    chatView.addUserMessage(message);
-    chatView.showThinkingIndicator();
-    inputArea.setBusy(true);
-    assistantStarted = false;
+    // Ctrl+T: new tab
+    scene
+        .getAccelerators()
+        .put(
+            new KeyCodeCombination(KeyCode.T, KeyCombination.CONTROL_DOWN),
+            () -> addNewTab(toolBar.getDirectory()));
 
-    currentProcess = new ClaudeProcess();
-    currentProcess.start(
-        message,
-        sessionManager.getCurrentSessionId(),
-        sessionManager.getWorkingDirectory(),
+    // Ctrl+W: close current tab
+    scene
+        .getAccelerators()
+        .put(
+            new KeyCodeCombination(KeyCode.W, KeyCombination.CONTROL_DOWN),
+            () -> {
+              var tab = getActiveTab();
+              if (tab != null && tabPane.getTabs().size() > 2) {
+                tabPane.getTabs().remove(tab);
+              }
+            });
+  }
+
+  private void addNewTab(String directory) {
+    var chatTab = new ChatTab(directory);
+    syncSettings(chatTab);
+
+    // Insert before the "+" tab
+    int addTabIndex = tabPane.getTabs().size() - 1;
+    tabPane.getTabs().add(addTabIndex, chatTab);
+    tabPane.getSelectionModel().select(chatTab);
+    chatTab.focusInput();
+  }
+
+  private ChatTab getActiveTab() {
+    Tab selected = tabPane.getSelectionModel().getSelectedItem();
+    return selected instanceof ChatTab ct ? ct : null;
+  }
+
+  private void syncSettings(ChatTab tab) {
+    tab.updateSettings(
         toolBar.getPermissionMode(),
-        toolBar.isPlanMode(),
         toolBar.getModel(),
-        this::handleEvent,
-        this::handleDone);
+        toolBar.getEffort(),
+        allowedTools,
+        disallowedTools,
+        mcpConfigPath);
   }
 
-  private void handleEvent(StreamEvent event) {
-    switch (event) {
-      case StreamEvent.Init init -> {
-        sessionManager.setCurrentSessionId(init.sessionId());
-        statusBar.setModel(init.model());
-      }
-
-      case StreamEvent.AssistantMessage msg -> {
-        // Show tool names from this event
-        for (String tool : msg.toolNames()) {
-          chatView.addSystemMessage("  " + tool, "tool-use-message");
-        }
-        // Only create a message cell if there's actual text content
-        if (!msg.text().isBlank()) {
-          chatView.hideThinkingIndicator();
-          chatView.finalizeAssistantMessage();
-          chatView.startAssistantMessage();
-          chatView.replaceAssistantContent(msg.text());
-          assistantStarted = true;
-          // Re-show thinking - more work may follow
-          chatView.showThinkingIndicator();
-        } else if (!msg.toolNames().isEmpty()) {
-          // Tools are running but no text yet - show thinking indicator
-          chatView.showThinkingIndicator();
-        }
-
-        // Handle interactive tool calls
-        if (msg.question() != null) {
-          chatView.hideThinkingIndicator();
-          chatView.addQuestionView(new QuestionView(msg.question(), this::handleSend));
-        }
-        if (msg.exitPlanMode()) {
-          chatView.hideThinkingIndicator();
-          chatView.addQuestionView(
-              QuestionView.forPlanApproval(this::handleSend, () -> inputArea.focus()));
-        }
-      }
-
-      case StreamEvent.Result result -> {
-        chatView.hideThinkingIndicator();
-        if (!assistantStarted && !result.text().isBlank()) {
-          chatView.startAssistantMessage();
-          chatView.appendToken(result.text());
-          assistantStarted = true;
-        }
-        chatView.finalizeAssistantMessage();
-        statusBar.updateFromResult(result);
-      }
-
-      case StreamEvent.ToolUse toolUse -> {
-        chatView.addSystemMessage(toolUse.toolName(), "tool-use-message");
-      }
-
-      case StreamEvent.ToolResult toolResult -> {
-        chatView.addSystemMessage(
-            "  Result: " + truncate(toolResult.output(), 200), "tool-use-message");
-      }
-
-      case StreamEvent.Error error -> {
-        chatView.hideThinkingIndicator();
-        chatView.addSystemMessage("Error: " + error.message(), "error-message");
-      }
-
-      case StreamEvent.RateLimit rl -> {
-        statusBar.updateFromRateLimit(rl);
-        if (!"allowed".equals(rl.status())) {
-          chatView.addSystemMessage("Rate limited: " + rl.rateLimitType(), "error-message");
-        }
-      }
-
-      case StreamEvent.Unknown unknown -> {
-        // Silently ignore unknown events
-      }
+  private void toggleSessionHistory() {
+    historyVisible = !historyVisible;
+    if (historyVisible) {
+      var tab = getActiveTab();
+      String dir =
+          tab != null ? tab.getSessionManager().getWorkingDirectory() : toolBar.getDirectory();
+      sessionHistory.loadSessions(dir, this::resumeSession);
+      setLeft(sessionHistory);
+    } else {
+      setLeft(null);
     }
   }
 
-  private void handleDone() {
-    chatView.hideThinkingIndicator();
-    chatView.finalizeAssistantMessage();
-    inputArea.setBusy(false);
-    inputArea.focus();
-    assistantStarted = false;
-  }
+  private void resumeSession(String sessionId) {
+    var tab = getActiveTab();
+    if (tab != null) {
+      tab.getSessionManager().setCurrentSessionId(sessionId);
+      syncSettings(tab);
 
-  private void handleCancel() {
-    if (currentProcess != null) {
-      currentProcess.cancel();
+      // Load and display the full conversation history
+      var messages =
+          SessionHistoryView.loadConversation(
+              tab.getSessionManager().getWorkingDirectory(), sessionId);
+      tab.loadSessionHistory(messages);
+      tab.focusInput();
     }
-    chatView.hideThinkingIndicator();
-    inputArea.setBusy(false);
-    chatView.addSystemMessage("Cancelled", "system-info");
   }
 
-  private static String truncate(String s, int max) {
-    if (s == null) return "";
-    return s.length() > max ? s.substring(0, max) + "..." : s;
+  private void showToolConfig() {
+    var dialog = new ToolConfigDialog(allowedTools, disallowedTools);
+    dialog
+        .showAndWait()
+        .ifPresent(
+            config -> {
+              allowedTools = config.allowed();
+              disallowedTools = config.disallowed();
+            });
   }
 
-  private void handleNewSession() {
-    sessionManager.newSession();
-    chatView.clear();
+  private void showMcpConfig() {
+    var tab = getActiveTab();
+    List<StreamEvent.McpServer> servers = tab != null ? tab.getLastMcpServers() : List.of();
+    var dialog = new McpConfigDialog(servers, mcpConfigPath);
+    dialog.showAndWait().ifPresent(path -> mcpConfigPath = path);
   }
 }

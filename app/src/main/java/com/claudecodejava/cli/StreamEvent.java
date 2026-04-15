@@ -10,7 +10,9 @@ public sealed interface StreamEvent {
 
   record QuestionData(String question, List<OptionData> options) {}
 
-  record Init(String sessionId, String model) implements StreamEvent {}
+  record McpServer(String name, String status) {}
+
+  record Init(String sessionId, String model, List<McpServer> mcpServers) implements StreamEvent {}
 
   record RateLimit(String status, String rateLimitType, long resetsAt) implements StreamEvent {}
 

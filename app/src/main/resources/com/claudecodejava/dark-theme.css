@@ -9,6 +9,38 @@
     -fx-background-color: #1e1e2e;
 }
 
+/* ===== Tab Pane ===== */
+.chat-tab-pane .tab-header-area {
+    -fx-padding: 0;
+}
+
+.chat-tab-pane .tab-header-background {
+    -fx-background-color: #181825;
+}
+
+.chat-tab-pane .tab {
+    -fx-background-color: #2a2a3e;
+    -fx-padding: 4 12 4 12;
+}
+
+.chat-tab-pane .tab:selected {
+    -fx-background-color: #1e1e2e;
+}
+
+.chat-tab-pane .tab .tab-label {
+    -fx-text-fill: #a6adc8;
+    -fx-font-size: 12px;
+}
+
+.chat-tab-pane .tab:selected .tab-label {
+    -fx-text-fill: #cdd6f4;
+    -fx-font-weight: bold;
+}
+
+.chat-tab-pane .tab-close-button {
+    -fx-background-color: #6c7086;
+}
+
 /* ===== Chat Scroll Area ===== */
 .chat-scroll {
     -fx-background-color: #1e1e2e;
@@ -351,6 +383,47 @@
     -fx-font-size: 13px;
     -fx-font-style: italic;
     -fx-opacity: 0.8;
+}
+
+/* ===== Session History ===== */
+.session-history {
+    -fx-background-color: #181825;
+    -fx-border-color: #313244;
+    -fx-border-width: 0 1 0 0;
+}
+
+.session-history .viewport {
+    -fx-background-color: #181825;
+}
+
+.session-history-list {
+    -fx-background-color: #181825;
+}
+
+.session-history-title {
+    -fx-text-fill: #a6adc8;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+.session-history-placeholder {
+    -fx-text-fill: #6c7086;
+    -fx-font-size: 12px;
+}
+
+.session-item {
+    -fx-background-color: #2a2a3e;
+    -fx-text-fill: #cdd6f4;
+    -fx-font-size: 11px;
+    -fx-padding: 8;
+    -fx-background-radius: 4px;
+    -fx-cursor: hand;
+    -fx-alignment: top-left;
+    -fx-wrap-text: true;
+}
+
+.session-item:hover {
+    -fx-background-color: #45475a;
 }
 
 /* ===== Status Bar ===== */

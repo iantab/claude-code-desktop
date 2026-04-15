@@ -14,15 +14,6 @@ public class ClaudeProcess {
   private Process process;
   private volatile boolean cancelled = false;
 
-  /**
-   * Starts a claude CLI subprocess on a virtual thread.
-   *
-   * @param message The user's message
-   * @param sessionId Session ID for --resume, or null for new session
-   * @param workingDir Working directory for the claude process
-   * @param onEvent Callback for each parsed event (called on FX thread)
-   * @param onDone Callback when process completes (called on FX thread)
-   */
   public void start(
       String message,
       String sessionId,
@@ -30,6 +21,11 @@ public class ClaudeProcess {
       String permissionMode,
       boolean planMode,
       String model,
+      String effort,
+      boolean continueLastSession,
+      List<String> allowedTools,
+      List<String> disallowedTools,
+      String mcpConfigPath,
       Consumer<StreamEvent> onEvent,
       Runnable onDone) {
     cancelled = false;
@@ -40,7 +36,17 @@ public class ClaudeProcess {
             () -> {
               try {
                 List<String> command =
-                    buildCommand(message, sessionId, permissionMode, planMode, model);
+                    buildCommand(
+                        message,
+                        sessionId,
+                        permissionMode,
+                        planMode,
+                        model,
+                        effort,
+                        continueLastSession,
+                        allowedTools,
+                        disallowedTools,
+                        mcpConfigPath);
                 var pb = new ProcessBuilder(command);
                 pb.directory(new java.io.File(workingDir));
                 pb.redirectErrorStream(false);
@@ -101,7 +107,16 @@ public class ClaudeProcess {
   }
 
   private List<String> buildCommand(
-      String message, String sessionId, String permissionMode, boolean planMode, String model) {
+      String message,
+      String sessionId,
+      String permissionMode,
+      boolean planMode,
+      String model,
+      String effort,
+      boolean continueLastSession,
+      List<String> allowedTools,
+      List<String> disallowedTools,
+      String mcpConfigPath) {
     var cmd = new ArrayList<String>();
     cmd.add("claude");
     cmd.add("-p");
@@ -110,12 +125,13 @@ public class ClaudeProcess {
     cmd.add("stream-json");
     cmd.add("--verbose");
 
-    if (sessionId != null && !sessionId.isBlank()) {
+    if (continueLastSession) {
+      cmd.add("--continue");
+    } else if (sessionId != null && !sessionId.isBlank()) {
       cmd.add("--resume");
       cmd.add(sessionId);
     }
 
-    // "plan" is a permission mode, so use it directly
     if (permissionMode != null && !"default".equals(permissionMode)) {
       cmd.add("--permission-mode");
       cmd.add(permissionMode);
@@ -126,9 +142,28 @@ public class ClaudeProcess {
       cmd.add(model);
     }
 
-    // Auto-allow safe read-only tools in non-interactive mode
+    if (effort != null && !effort.isBlank()) {
+      cmd.add("--effort");
+      cmd.add(effort);
+    }
+
+    if (mcpConfigPath != null && !mcpConfigPath.isBlank()) {
+      cmd.add("--mcp-config");
+      cmd.add(mcpConfigPath);
+    }
+
+    // Build allowed tools list (always include WebSearch, WebFetch)
+    var allAllowed = new ArrayList<>(List.of("WebSearch", "WebFetch"));
+    if (allowedTools != null) {
+      allAllowed.addAll(allowedTools);
+    }
     cmd.add("--allowedTools");
-    cmd.add("WebSearch,WebFetch");
+    cmd.add(String.join(",", allAllowed));
+
+    if (disallowedTools != null && !disallowedTools.isEmpty()) {
+      cmd.add("--disallowedTools");
+      cmd.add(String.join(",", disallowedTools));
+    }
 
     return cmd;
   }

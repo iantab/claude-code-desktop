@@ -35,8 +35,18 @@ public class EventParser {
   private static StreamEvent parseSystem(JsonNode root) {
     String subtype = root.path("subtype").asText("");
     if ("init".equals(subtype)) {
+      var mcpServers = new ArrayList<StreamEvent.McpServer>();
+      JsonNode servers = root.path("mcp_servers");
+      if (servers.isArray()) {
+        for (JsonNode s : servers) {
+          mcpServers.add(
+              new StreamEvent.McpServer(s.path("name").asText(""), s.path("status").asText("")));
+        }
+      }
       return new StreamEvent.Init(
-          root.path("session_id").asText(""), root.path("model").asText(""));
+          root.path("session_id").asText(""),
+          root.path("model").asText(""),
+          List.copyOf(mcpServers));
     }
     return new StreamEvent.Unknown("system:" + subtype, root);
   }
