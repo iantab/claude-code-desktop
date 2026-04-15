@@ -28,10 +28,6 @@ Instead of reimplementing the Claude Code protocol, this app spawns the `claude`
 - **Links open externally** -- URLs in responses open in your default browser
 - **Cancel anytime** -- kill a running request with the Cancel button or Escape key
 
-## Screenshots
-
-<!-- Add screenshots here -->
-
 ## Prerequisites
 
 - **Java 21+** (tested with Java 25)
