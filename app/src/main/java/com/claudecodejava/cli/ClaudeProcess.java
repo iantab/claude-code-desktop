@@ -26,6 +26,7 @@ public class ClaudeProcess {
       List<String> allowedTools,
       List<String> disallowedTools,
       String mcpConfigPath,
+      String ipcDir,
       Consumer<StreamEvent> onEvent,
       Runnable onDone) {
     cancelled = false;
@@ -46,10 +47,14 @@ public class ClaudeProcess {
                         continueLastSession,
                         allowedTools,
                         disallowedTools,
-                        mcpConfigPath);
+                        mcpConfigPath,
+                        ipcDir);
                 var pb = new ProcessBuilder(command);
                 pb.directory(new java.io.File(workingDir));
                 pb.redirectErrorStream(false);
+                if (ipcDir != null) {
+                  pb.environment().put("CLAUDE_JAVA_IPC_DIR", ipcDir);
+                }
                 pb.redirectInput(
                     ProcessBuilder.Redirect.from(
                         new java.io.File(
@@ -116,7 +121,8 @@ public class ClaudeProcess {
       boolean continueLastSession,
       List<String> allowedTools,
       List<String> disallowedTools,
-      String mcpConfigPath) {
+      String mcpConfigPath,
+      String ipcDir) {
     var cmd = new ArrayList<String>();
     cmd.add("claude");
     cmd.add("-p");
@@ -163,6 +169,11 @@ public class ClaudeProcess {
     if (disallowedTools != null && !disallowedTools.isEmpty()) {
       cmd.add("--disallowedTools");
       cmd.add(String.join(",", disallowedTools));
+    }
+
+    if (ipcDir != null) {
+      cmd.add("--settings");
+      cmd.add(ipcDir + "/hook-settings.json");
     }
 
     return cmd;

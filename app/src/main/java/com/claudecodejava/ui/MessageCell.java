@@ -2,7 +2,10 @@ package com.claudecodejava.ui;
 
 import javafx.concurrent.Worker;
 import javafx.geometry.Insets;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.VBox;
 import javafx.scene.web.WebView;
 
@@ -114,6 +117,22 @@ public class MessageCell extends VBox {
 
     webView.getEngine().loadContent(html);
 
+    // Intercept scroll events during capturing phase before WebView consumes them
+    webView.addEventFilter(
+        ScrollEvent.SCROLL,
+        scrollEvent -> {
+          ScrollPane scrollPane = findParentScrollPane(webView);
+          if (scrollPane == null) return;
+          double deltaY = scrollEvent.getDeltaY();
+          double contentHeight = scrollPane.getContent().getBoundsInLocal().getHeight();
+          double viewportHeight = scrollPane.getViewportBounds().getHeight();
+          if (contentHeight <= viewportHeight) return;
+          double vvalue = scrollPane.getVvalue();
+          double newValue = vvalue - (deltaY / (contentHeight - viewportHeight));
+          scrollPane.setVvalue(Math.max(0, Math.min(1, newValue)));
+          scrollEvent.consume();
+        });
+
     // Swap the label for the webview
     int idx = getChildren().indexOf(contentLabel);
     if (idx >= 0) {
@@ -125,5 +144,14 @@ public class MessageCell extends VBox {
   public String getContent() {
     if (isUser) return "";
     return contentBuilder != null ? contentBuilder.toString() : "";
+  }
+
+  private static ScrollPane findParentScrollPane(javafx.scene.Node node) {
+    Parent current = node.getParent();
+    while (current != null) {
+      if (current instanceof ScrollPane sp) return sp;
+      current = current.getParent();
+    }
+    return null;
   }
 }

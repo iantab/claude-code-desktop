@@ -8,7 +8,8 @@ public sealed interface StreamEvent {
 
   record OptionData(String label, String description) {}
 
-  record QuestionData(String question, List<OptionData> options) {}
+  record QuestionData(
+      String question, List<OptionData> options, boolean multiSelect, JsonNode rawQuestions) {}
 
   record McpServer(String name, String status) {}
 

@@ -351,6 +351,22 @@
     -fx-opacity: 0.5;
 }
 
+.submit-button {
+    -fx-background-color: #89b4fa;
+    -fx-text-fill: #1e1e2e;
+    -fx-font-weight: bold;
+}
+
+.submit-button:hover {
+    -fx-background-color: #b4d0fb;
+}
+
+.submit-button:disabled {
+    -fx-background-color: #45475a;
+    -fx-text-fill: #6c7086;
+    -fx-opacity: 0.7;
+}
+
 .option-selected {
     -fx-background-color: #89b4fa;
     -fx-text-fill: #1e1e2e;

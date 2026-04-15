@@ -4,9 +4,14 @@ import com.claudecodejava.cli.ClaudeProcess;
 import com.claudecodejava.cli.EventParser;
 import com.claudecodejava.cli.SessionManager;
 import com.claudecodejava.cli.StreamEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +32,10 @@ public class ChatTab extends Tab {
   private final SessionManager sessionManager;
   private ClaudeProcess currentProcess;
   private boolean assistantStarted = false;
+  private boolean hookQuestionPending = false;
+  private StreamEvent.QuestionData pendingQuestionData = null;
+  private final Path ipcDir;
+  private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
 
   // Shared settings (set by MainWindow before each send)
   private String permissionMode = "default";
@@ -51,11 +60,14 @@ public class ChatTab extends Tab {
     sessionManager = new SessionManager();
     sessionManager.setWorkingDirectory(directory);
 
+    // Set up IPC directory for hook-based question answering
+    ipcDir = Path.of(System.getProperty("java.io.tmpdir"), "claude-java-" + System.nanoTime());
+    setupIpcFiles();
+
     setText(directoryBasename(directory));
     setClosable(true);
 
     chatView = new ChatView();
-    VBox.setVgrow(chatView, Priority.ALWAYS);
 
     inputArea = new InputArea();
     inputArea.setOnSend(this::handleSend);
@@ -63,9 +75,13 @@ public class ChatTab extends Tab {
 
     statusBar = new StatusBar();
 
-    var container = new VBox(chatView, inputArea, statusBar);
-    VBox.setVgrow(chatView, Priority.ALWAYS);
+    var chatContainer = chatView.getContainer();
+    VBox.setVgrow(chatContainer, Priority.ALWAYS);
+    var container = new VBox(chatContainer, inputArea, statusBar);
     setContent(container);
+
+    // Clean up IPC dir when tab is closed
+    setOnClosed(e -> cleanupIpcDir());
 
     // Right-click context menu for renaming
     var renameItem = new MenuItem("Rename");
@@ -228,6 +244,17 @@ public class ChatTab extends Tab {
     launchProcess(message, false);
   }
 
+  private void handleQuestionAnswer(String answer) {
+    if (pendingQuestionData != null) {
+      writeAnswerFile(pendingQuestionData, answer);
+      chatView.addUserMessage(answer);
+      chatView.showThinkingIndicator();
+      inputArea.setBusy(true);
+      pendingQuestionData = null;
+      hookQuestionPending = false;
+    }
+  }
+
   private void launchProcess(String message, boolean continueSession) {
     chatView.addUserMessage(message);
     chatView.showThinkingIndicator();
@@ -247,6 +274,7 @@ public class ChatTab extends Tab {
         allowedTools,
         disallowedTools,
         mcpConfigPath,
+        ipcDir.toString(),
         this::handleEvent,
         this::handleDone);
   }
@@ -275,11 +303,19 @@ public class ChatTab extends Tab {
         }
 
         if (msg.question() != null) {
+          hookQuestionPending = true;
+          pendingQuestionData = msg.question();
           chatView.hideThinkingIndicator();
-          chatView.addQuestionView(new QuestionView(msg.question(), this::handleSend));
+          chatView.finalizeAssistantMessage();
+          inputArea.setBusy(false);
+          assistantStarted = false;
+          chatView.addQuestionView(new QuestionView(msg.question(), this::handleQuestionAnswer));
         }
         if (msg.exitPlanMode()) {
           chatView.hideThinkingIndicator();
+          chatView.finalizeAssistantMessage();
+          inputArea.setBusy(false);
+          assistantStarted = false;
           chatView.addQuestionView(
               QuestionView.forPlanApproval(this::handleSend, () -> inputArea.focus()));
         }
@@ -335,10 +371,12 @@ public class ChatTab extends Tab {
   }
 
   private void handleDone() {
-    chatView.hideThinkingIndicator();
-    chatView.finalizeAssistantMessage();
-    inputArea.setBusy(false);
-    inputArea.focus();
+    if (!hookQuestionPending) {
+      chatView.hideThinkingIndicator();
+      chatView.finalizeAssistantMessage();
+      inputArea.setBusy(false);
+      inputArea.focus();
+    }
     assistantStarted = false;
   }
 
@@ -354,6 +392,86 @@ public class ChatTab extends Tab {
   private static String truncate(String s, int max) {
     if (s == null) return "";
     return s.length() > max ? s.substring(0, max) + "..." : s;
+  }
+
+  private void setupIpcFiles() {
+    try {
+      Files.createDirectories(ipcDir);
+
+      // Write the hook script
+      String hookScript =
+          """
+          #!/bin/bash
+          ANSWER_FILE="$CLAUDE_JAVA_IPC_DIR/answer.json"
+          rm -f "$ANSWER_FILE"
+          for i in $(seq 1 600); do
+              [ -f "$ANSWER_FILE" ] && break
+              sleep 0.5
+          done
+          if [ -f "$ANSWER_FILE" ]; then
+              cat "$ANSWER_FILE"
+              rm -f "$ANSWER_FILE"
+          else
+              echo '{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"deny","permissionDecisionReason":"User did not respond in time"}}'
+          fi
+          """;
+      Files.writeString(ipcDir.resolve("question-hook.sh"), hookScript);
+
+      // Write the hook settings JSON
+      String hookPath = ipcDir.resolve("question-hook.sh").toString().replace("\\", "/");
+      String settingsJson =
+          """
+          {
+            "hooks": {
+              "PreToolUse": [
+                {
+                  "matcher": "AskUserQuestion",
+                  "hooks": [{"type": "command", "command": "bash %s"}]
+                }
+              ]
+            }
+          }
+          """
+              .formatted(hookPath);
+      Files.writeString(ipcDir.resolve("hook-settings.json"), settingsJson);
+    } catch (Exception e) {
+      System.err.println("Failed to set up IPC files: " + e.getMessage());
+    }
+  }
+
+  private void writeAnswerFile(StreamEvent.QuestionData question, String answer) {
+    try {
+      ObjectNode root = JSON_MAPPER.createObjectNode();
+      ObjectNode hookOutput = root.putObject("hookSpecificOutput");
+      hookOutput.put("hookEventName", "PreToolUse");
+      hookOutput.put("permissionDecision", "allow");
+
+      ObjectNode updatedInput = hookOutput.putObject("updatedInput");
+      if (question.rawQuestions() != null) {
+        updatedInput.set("questions", question.rawQuestions());
+      }
+
+      ObjectNode answers = updatedInput.putObject("answers");
+      answers.put(question.question(), answer);
+
+      Path tmpFile = ipcDir.resolve("answer.json.tmp");
+      Path answerFile = ipcDir.resolve("answer.json");
+      Files.writeString(tmpFile, JSON_MAPPER.writeValueAsString(root));
+      Files.move(tmpFile, answerFile, StandardCopyOption.ATOMIC_MOVE);
+    } catch (Exception e) {
+      System.err.println("Failed to write answer file: " + e.getMessage());
+    }
+  }
+
+  private void cleanupIpcDir() {
+    try {
+      if (Files.exists(ipcDir)) {
+        try (var walk = Files.walk(ipcDir)) {
+          walk.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
+        }
+      }
+    } catch (Exception ignored) {
+    }
   }
 
   private static String directoryBasename(String path) {

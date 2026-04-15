@@ -101,11 +101,12 @@ public class EventParser {
     if (!questions.isArray() || questions.isEmpty()) {
       // Fallback: try direct question field
       String q = input.path("question").asText(null);
-      return q != null ? new StreamEvent.QuestionData(q, List.of()) : null;
+      return q != null ? new StreamEvent.QuestionData(q, List.of(), false, null) : null;
     }
 
     JsonNode first = questions.get(0);
     String questionText = first.path("question").asText("Question from Claude");
+    boolean multiSelect = first.path("multiSelect").asBoolean(false);
     var options = new ArrayList<StreamEvent.OptionData>();
 
     JsonNode opts = first.path("options");
@@ -117,7 +118,7 @@ public class EventParser {
       }
     }
 
-    return new StreamEvent.QuestionData(questionText, List.copyOf(options));
+    return new StreamEvent.QuestionData(questionText, List.copyOf(options), multiSelect, questions);
   }
 
   private static String summarizeTool(String toolName, JsonNode input) {

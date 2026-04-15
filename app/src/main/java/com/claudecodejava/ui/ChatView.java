@@ -4,8 +4,10 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
@@ -14,6 +16,8 @@ public class ChatView extends ScrollPane {
 
   private final VBox messagesBox;
   private final MarkdownRenderer markdownRenderer;
+  private final StackPane overlayContainer;
+  private final AutoScrollHandler autoScrollHandler;
   private MessageCell currentAssistantCell;
   private Label thinkingLabel;
   private Timeline thinkingAnimation;
@@ -30,6 +34,10 @@ public class ChatView extends ScrollPane {
     setHbarPolicy(ScrollBarPolicy.NEVER);
     setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
     getStyleClass().add("chat-scroll");
+
+    overlayContainer = new StackPane(this);
+    StackPane.setAlignment(this, Pos.TOP_LEFT);
+    autoScrollHandler = new AutoScrollHandler(this, overlayContainer);
 
     // Welcome message
     var welcome = new Label("Claude Code Java \u2014 Type a message to get started");
@@ -134,6 +142,11 @@ public class ChatView extends ScrollPane {
     scrollToBottom();
   }
 
+  /** Returns the StackPane wrapper that should be used in layouts instead of this ScrollPane. */
+  public StackPane getContainer() {
+    return overlayContainer;
+  }
+
   public void clear() {
     hideThinkingIndicator();
     messagesBox.getChildren().clear();
@@ -147,6 +160,7 @@ public class ChatView extends ScrollPane {
   }
 
   private void scrollToBottom() {
+    if (autoScrollHandler != null && autoScrollHandler.isActive()) return;
     Platform.runLater(() -> setVvalue(1.0));
   }
 }
