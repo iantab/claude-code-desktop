@@ -14,19 +14,13 @@ Instead of reimplementing the Claude Code protocol, this app spawns the `claude`
 
 ## Features
 
-- **Streaming responses** with markdown rendering (tables, bold, code blocks, links)
-- **Full tool visibility** -- see every Read, Write, Bash, Grep, Glob, Agent, WebSearch call with details
-- **Thinking indicator** -- animated "Claude is thinking..." that persists during tool use
-- **Model selector** -- switch between Opus, Sonnet, Haiku, or any custom model
-- **Permission modes** -- default, plan, acceptEdits, auto, bypassPermissions
-- **Directory picker** -- choose your working directory with a native file browser
-- **Session continuity** -- multi-turn conversations via `--resume`
-- **Interactive questions** -- clickable option buttons when Claude asks a question
-- **Plan mode support** -- approve or request changes to plans with one click
-- **Usage stats** -- tokens, cost, and rate limit reset time in the status bar
-- **Dark theme** -- Catppuccin-inspired dark UI with Cascadia Mono font
-- **Links open externally** -- URLs in responses open in your default browser
-- **Cancel anytime** -- kill a running request with the Cancel button or Escape key
+- **No API key needed** -- uses your existing Claude Max / Pro subscription
+- **Streaming markdown** -- tables, bold, code blocks, and links rendered properly
+- **Tool visibility** -- see every Read, Bash, WebSearch, Agent call with details
+- **Model & mode selector** -- switch models (Opus/Sonnet/Haiku) and permission modes (plan, acceptEdits, etc.)
+- **Interactive plan mode** -- approve or request changes to plans with clickable buttons
+- **Usage stats** -- tokens, cost, and rate limit countdown in the status bar
+- **Dark theme** -- Catppuccin-inspired UI with Cascadia Mono font
 
 ## Prerequisites
 
