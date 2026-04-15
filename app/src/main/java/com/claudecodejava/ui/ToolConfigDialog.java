@@ -39,6 +39,10 @@ public class ToolConfigDialog extends Dialog<ToolConfigDialog.ToolConfig> {
 
     var applyType = new ButtonType("Apply", ButtonBar.ButtonData.OK_DONE);
     getDialogPane().getButtonTypes().addAll(applyType, ButtonType.CANCEL);
+    getDialogPane()
+        .getStylesheets()
+        .add(getClass().getResource("/com/claudecodejava/dark-theme.css").toExternalForm());
+    getDialogPane().getStyleClass().add("dark-dialog");
 
     var grid = new GridPane();
     grid.setHgap(12);

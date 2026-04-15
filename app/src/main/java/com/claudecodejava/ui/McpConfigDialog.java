@@ -17,6 +17,10 @@ public class McpConfigDialog extends Dialog<String> {
   public McpConfigDialog(List<StreamEvent.McpServer> servers, String currentConfigPath) {
     setTitle("MCP Servers");
     setHeaderText("Model Context Protocol server configuration");
+    getDialogPane()
+        .getStylesheets()
+        .add(getClass().getResource("/com/claudecodejava/dark-theme.css").toExternalForm());
+    getDialogPane().getStyleClass().add("dark-dialog");
 
     var applyType = new ButtonType("Apply", ButtonBar.ButtonData.OK_DONE);
     getDialogPane().getButtonTypes().addAll(applyType, ButtonType.CANCEL);

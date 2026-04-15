@@ -45,6 +45,7 @@ public class MainWindow extends BorderPane {
     toolBar.setOnToolsConfig(this::showToolConfig);
     toolBar.setOnMcpConfig(this::showMcpConfig);
     toolBar.setOnSessionHistory(this::toggleSessionHistory);
+    toolBar.setOnUsage(this::showUsage);
 
     sessionHistory = new SessionHistoryView(this::resumeSession);
 
@@ -153,6 +154,22 @@ public class MainWindow extends BorderPane {
               tab.getSessionManager().getWorkingDirectory(), sessionId);
       tab.loadSessionHistory(messages);
       tab.focusInput();
+    }
+  }
+
+  private void showUsage() {
+    var tab = getActiveTab();
+    if (tab == null) return;
+
+    var data = tab.getUsageData();
+    if (data.rateLimits().isEmpty()) {
+      // No rate limit data yet — fetch it, then open the dialog
+      var dialog = new UsageDialog(data);
+      dialog.showLoading();
+      dialog.show();
+      tab.fetchQuotaCheck(() -> dialog.updateData(tab.getUsageData()));
+    } else {
+      new UsageDialog(data).showAndWait();
     }
   }
 

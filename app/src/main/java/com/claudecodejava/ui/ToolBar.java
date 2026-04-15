@@ -27,6 +27,7 @@ public class ToolBar extends HBox {
   private Runnable onToolsConfig;
   private Runnable onMcpConfig;
   private Runnable onSessionHistory;
+  private Runnable onUsage;
 
   public ToolBar(String initialDirectory) {
     setSpacing(10);
@@ -130,6 +131,13 @@ public class ToolBar extends HBox {
           if (onSessionHistory != null) onSessionHistory.run();
         });
 
+    var usageButton = new Button("Usage");
+    usageButton.getStyleClass().add("toolbar-button");
+    usageButton.setOnAction(
+        e -> {
+          if (onUsage != null) onUsage.run();
+        });
+
     getChildren()
         .addAll(
             dirLabel,
@@ -147,7 +155,8 @@ public class ToolBar extends HBox {
             createSeparator(),
             toolsButton,
             mcpButton,
-            historyButton);
+            historyButton,
+            usageButton);
   }
 
   public void setOnDirectoryChanged(Consumer<String> onDirectoryChanged) {
@@ -186,6 +195,10 @@ public class ToolBar extends HBox {
 
   public void setOnSessionHistory(Runnable onSessionHistory) {
     this.onSessionHistory = onSessionHistory;
+  }
+
+  public void setOnUsage(Runnable onUsage) {
+    this.onUsage = onUsage;
   }
 
   public boolean isPlanMode() {

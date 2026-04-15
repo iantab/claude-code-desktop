@@ -426,6 +426,66 @@
     -fx-background-color: #45475a;
 }
 
+/* ===== Dark Dialogs ===== */
+.dark-dialog {
+    -fx-background-color: #1e1e2e;
+}
+
+.dark-dialog .header-panel {
+    -fx-background-color: #181825;
+}
+
+.dark-dialog .header-panel .label {
+    -fx-text-fill: #cdd6f4;
+}
+
+.dark-dialog .content.label {
+    -fx-text-fill: #cdd6f4;
+}
+
+.dark-dialog .label {
+    -fx-text-fill: #a6adc8;
+}
+
+.dark-dialog .button {
+    -fx-background-color: #45475a;
+    -fx-text-fill: #cdd6f4;
+    -fx-background-radius: 4px;
+}
+
+.dark-dialog .button:hover {
+    -fx-background-color: #585b70;
+}
+
+.dark-dialog .button:default {
+    -fx-background-color: #89b4fa;
+    -fx-text-fill: #1e1e2e;
+}
+
+.dark-dialog .text-field {
+    -fx-background-color: #2a2a3e;
+    -fx-text-fill: #cdd6f4;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+
+.dark-dialog .combo-box {
+    -fx-background-color: #2a2a3e;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 4px;
+    -fx-background-radius: 4px;
+}
+
+.dark-dialog .combo-box .list-cell {
+    -fx-text-fill: #cdd6f4;
+    -fx-background-color: #2a2a3e;
+}
+
+.dark-dialog .button-bar {
+    -fx-background-color: #181825;
+}
+
 /* ===== Status Bar ===== */
 .status-bar {
     -fx-background-color: #11111b;

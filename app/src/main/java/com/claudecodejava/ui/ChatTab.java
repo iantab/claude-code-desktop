@@ -1,9 +1,16 @@
 package com.claudecodejava.ui;
 
 import com.claudecodejava.cli.ClaudeProcess;
+import com.claudecodejava.cli.EventParser;
 import com.claudecodejava.cli.SessionManager;
 import com.claudecodejava.cli.StreamEvent;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import javafx.application.Platform;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
@@ -28,6 +35,17 @@ public class ChatTab extends Tab {
   private List<String> allowedTools = List.of();
   private List<String> disallowedTools = List.of();
   private String mcpConfigPath = null;
+
+  // Cumulative usage stats
+  private double totalCostUsd = 0;
+  private int totalInputTokens = 0;
+  private int totalOutputTokens = 0;
+  private int totalCacheReadTokens = 0;
+  private int totalCacheCreateTokens = 0;
+  private int totalDurationMs = 0;
+  private int messageCount = 0;
+  private final Map<String, StreamEvent.RateLimit> rateLimits = new LinkedHashMap<>();
+  private volatile boolean quotaCheckDone = false;
 
   public ChatTab(String directory) {
     sessionManager = new SessionManager();
@@ -120,6 +138,90 @@ public class ChatTab extends Tab {
     return lastMcpServers;
   }
 
+  /** Usage data snapshot for the UsageDialog. */
+  public record UsageData(
+      String model,
+      int messageCount,
+      double totalCostUsd,
+      int totalInputTokens,
+      int totalOutputTokens,
+      int totalCacheReadTokens,
+      int totalCacheCreateTokens,
+      int totalDurationMs,
+      Map<String, StreamEvent.RateLimit> rateLimits) {}
+
+  public UsageData getUsageData() {
+    return new UsageData(
+        model,
+        messageCount,
+        totalCostUsd,
+        totalInputTokens,
+        totalOutputTokens,
+        totalCacheReadTokens,
+        totalCacheCreateTokens,
+        totalDurationMs,
+        Map.copyOf(rateLimits));
+  }
+
+  /** Run a lightweight quota check to fetch rate limit data without a real conversation. */
+  public void fetchQuotaCheck(Runnable onComplete) {
+    if (quotaCheckDone) {
+      if (onComplete != null) Platform.runLater(onComplete);
+      return;
+    }
+    Thread.ofVirtual()
+        .name("quota-check")
+        .start(
+            () -> {
+              try {
+                var cmd =
+                    List.of(
+                        "claude",
+                        "-p",
+                        "hi",
+                        "--output-format",
+                        "stream-json",
+                        "--verbose",
+                        "--bare",
+                        "--max-budget-usd",
+                        "0.01");
+                var pb = new ProcessBuilder(cmd);
+                pb.directory(new java.io.File(sessionManager.getWorkingDirectory()));
+                pb.redirectErrorStream(false);
+                pb.redirectInput(
+                    ProcessBuilder.Redirect.from(
+                        new java.io.File(
+                            System.getProperty("os.name").toLowerCase().contains("win")
+                                ? "NUL"
+                                : "/dev/null")));
+                var proc = pb.start();
+                try (var reader =
+                    new BufferedReader(
+                        new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
+                  String line;
+                  while ((line = reader.readLine()) != null) {
+                    String json = line.trim();
+                    if (json.isEmpty()) continue;
+                    StreamEvent event = EventParser.parse(json);
+                    if (event instanceof StreamEvent.RateLimit rl
+                        && !rl.rateLimitType().isEmpty()) {
+                      Platform.runLater(
+                          () -> {
+                            rateLimits.put(rl.rateLimitType(), rl);
+                            statusBar.updateFromRateLimit(rl);
+                          });
+                    }
+                  }
+                }
+                proc.waitFor();
+                quotaCheckDone = true;
+              } catch (Exception ignored) {
+              } finally {
+                if (onComplete != null) Platform.runLater(onComplete);
+              }
+            });
+  }
+
   private List<StreamEvent.McpServer> lastMcpServers = List.of();
 
   private void handleSend(String message) {
@@ -192,6 +294,15 @@ public class ChatTab extends Tab {
         }
         chatView.finalizeAssistantMessage();
         statusBar.updateFromResult(result);
+
+        // Accumulate usage
+        totalCostUsd += result.costUsd();
+        totalInputTokens += result.inputTokens();
+        totalOutputTokens += result.outputTokens();
+        totalCacheReadTokens += result.cacheReadTokens();
+        totalCacheCreateTokens += result.cacheCreateTokens();
+        totalDurationMs += result.durationMs();
+        messageCount++;
       }
 
       case StreamEvent.ToolUse toolUse -> {
@@ -209,6 +320,10 @@ public class ChatTab extends Tab {
       }
 
       case StreamEvent.RateLimit rl -> {
+        if (!rl.rateLimitType().isEmpty()) {
+          rateLimits.put(rl.rateLimitType(), rl);
+        }
+        quotaCheckDone = true;
         statusBar.updateFromRateLimit(rl);
         if (!"allowed".equals(rl.status())) {
           chatView.addSystemMessage("Rate limited: " + rl.rateLimitType(), "error-message");

@@ -56,7 +56,8 @@ public class EventParser {
     return new StreamEvent.RateLimit(
         info.path("status").asText(""),
         info.path("rateLimitType").asText(""),
-        info.path("resetsAt").asLong(0));
+        info.path("resetsAt").asLong(0),
+        info.path("utilization").asDouble(-1));
   }
 
   private static StreamEvent parseAssistant(JsonNode root) {

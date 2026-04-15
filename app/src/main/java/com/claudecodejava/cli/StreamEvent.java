@@ -14,7 +14,8 @@ public sealed interface StreamEvent {
 
   record Init(String sessionId, String model, List<McpServer> mcpServers) implements StreamEvent {}
 
-  record RateLimit(String status, String rateLimitType, long resetsAt) implements StreamEvent {}
+  record RateLimit(String status, String rateLimitType, long resetsAt, double utilization)
+      implements StreamEvent {}
 
   record AssistantMessage(
       String text,
