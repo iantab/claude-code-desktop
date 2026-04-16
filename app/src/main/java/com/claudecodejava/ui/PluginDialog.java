@@ -317,7 +317,7 @@ public class PluginDialog {
     sourceLabel.setStyle("-fx-text-fill: #6c7086; -fx-font-size: 11px;");
 
     var statusDot = new Label(enabled ? "● Enabled" : "○ Disabled");
-    statusDot.setStyle(enabled ? "-fx-text-fill: #a6e3a1;" : "-fx-text-fill: #6c7086;");
+    statusDot.setTextFill(javafx.scene.paint.Color.web(enabled ? "#a6e3a1" : "#6c7086"));
 
     var toggleBtn = new Button(enabled ? "Disable" : "Enable");
     toggleBtn.getStyleClass().add("toolbar-button");

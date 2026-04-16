@@ -25,7 +25,4 @@ public class App extends Application {
     mainWindow.focusInput();
   }
 
-  public static void main(String[] args) {
-    launch(args);
-  }
 }
