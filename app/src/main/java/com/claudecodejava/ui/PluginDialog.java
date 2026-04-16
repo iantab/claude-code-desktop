@@ -85,7 +85,7 @@ public class PluginDialog {
     var searchField = new TextField();
     searchField.setPromptText("Search plugins...");
     searchField.getStyleClass().add("directory-field");
-    searchField.textProperty().addListener((obs, old, text) -> filterMarketplace(text));
+    searchField.textProperty().addListener((_, _, text) -> filterMarketplace(text));
 
     marketplaceList = new VBox(6);
     marketplaceList.setPadding(new Insets(8));
@@ -111,12 +111,12 @@ public class PluginDialog {
     // === Footer ===
     var reloadButton = new Button("Reload");
     reloadButton.getStyleClass().add("toolbar-button");
-    reloadButton.setOnAction(e -> reloadMarketplace());
+    reloadButton.setOnAction(_ -> reloadMarketplace());
     Animations.addPressEffect(reloadButton);
 
     var closeButton = new Button("Close");
     closeButton.getStyleClass().add("toolbar-button");
-    closeButton.setOnAction(e -> stage.close());
+    closeButton.setOnAction(_ -> stage.close());
     Animations.addPressEffect(closeButton);
 
     var footerSpacer = new Region();
@@ -136,9 +136,8 @@ public class PluginDialog {
     root.setBottom(footer);
 
     var scene = new Scene(root, 750, 520);
-    scene
-        .getStylesheets()
-        .add(getClass().getResource("/com/claudecodejava/dark-theme.css").toExternalForm());
+    var css = getClass().getResource("/com/claudecodejava/dark-theme.css");
+    if (css != null) scene.getStylesheets().add(css.toExternalForm());
     stage.setScene(scene);
 
     // Load data
@@ -190,9 +189,9 @@ public class PluginDialog {
             });
   }
 
-  private List<JsonNode> allMarketplacePlugins = new ArrayList<>();
-  private Map<String, Integer> installCounts = new HashMap<>();
-  private List<String> installedIds = new ArrayList<>();
+  private final List<JsonNode> allMarketplacePlugins = new ArrayList<>();
+  private final Map<String, Integer> installCounts = new HashMap<>();
+  private final List<String> installedIds = new ArrayList<>();
 
   private void loadMarketplace() {
     marketplaceList.getChildren().clear();
@@ -326,16 +325,16 @@ public class PluginDialog {
     var toggleBtn = new Button(enabled ? "Disable" : "Enable");
     toggleBtn.getStyleClass().add("toolbar-button");
     toggleBtn.setOnAction(
-        e -> runPluginCommand(enabled ? "disable" : "enable", name, toggleBtn));
+        _ -> runPluginCommand(enabled ? "disable" : "enable", name, toggleBtn));
 
     var updateBtn = new Button("Update");
     updateBtn.getStyleClass().add("toolbar-button");
-    updateBtn.setOnAction(e -> runPluginCommand("update", name, updateBtn));
+    updateBtn.setOnAction(_ -> runPluginCommand("update", name, updateBtn));
 
     var uninstallBtn = new Button("Uninstall");
     uninstallBtn.getStyleClass().add("toolbar-button");
     uninstallBtn.setStyle("-fx-text-fill: #f38ba8;");
-    uninstallBtn.setOnAction(e -> runPluginCommand("uninstall", name, uninstallBtn));
+    uninstallBtn.setOnAction(_ -> runPluginCommand("uninstall", name, uninstallBtn));
 
     var spacer = new Region();
     HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -379,7 +378,7 @@ public class PluginDialog {
           "-fx-background-color: #a6e3a1; -fx-text-fill: #1e1e2e; -fx-font-weight: bold;");
     }
     installBtn.setDisable(alreadyInstalled);
-    installBtn.setOnAction(e -> runPluginCommand("install", name, installBtn));
+    installBtn.setOnAction(_ -> runPluginCommand("install", name, installBtn));
 
     var topRow = new HBox(8, nameLabel, categoryLabel, installsLabel, spacer, installBtn);
     topRow.setAlignment(Pos.CENTER_LEFT);

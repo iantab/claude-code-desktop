@@ -20,7 +20,7 @@ public class MainWindow extends BorderPane {
   private List<String> allowedTools = List.of();
   private List<String> disallowedTools = List.of();
   private String mcpConfigPath = null;
-  private SessionHistoryView sessionHistory;
+  private final SessionHistoryView sessionHistory;
   private boolean historyVisible = false;
 
   public MainWindow(String initialDirectory) {
@@ -65,7 +65,7 @@ public class MainWindow extends BorderPane {
         .getSelectionModel()
         .selectedItemProperty()
         .addListener(
-            (obs, oldTab, newTab) -> {
+            (_, _, newTab) -> {
               if (newTab == addTab) {
                 addNewTab(initialDirectory);
               } else if (newTab instanceof ChatTab ct) {
@@ -78,10 +78,6 @@ public class MainWindow extends BorderPane {
 
     // Create first tab
     addNewTab(initialDirectory);
-  }
-
-  public ToolBar getToolBar() {
-    return toolBar;
   }
 
   public void focusInput() {

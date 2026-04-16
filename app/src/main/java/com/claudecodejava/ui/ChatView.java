@@ -92,7 +92,7 @@ public class ChatView extends ScrollPane {
         new Timeline(
             new KeyFrame(
                 Duration.millis(400),
-                e -> {
+                _ -> {
                   dotCount[0] = (dotCount[0] % 3) + 1;
                   thinkingLabel.setText("Claude is thinking" + ".".repeat(dotCount[0]));
                 }));

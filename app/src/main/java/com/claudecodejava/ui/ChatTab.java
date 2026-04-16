@@ -168,12 +168,12 @@ public class ChatTab extends Tab {
         });
 
     // Clean up IPC dir when tab is closed
-    setOnClosed(e -> cleanupIpcDir());
+    setOnClosed(_ -> cleanupIpcDir());
 
     // Right-click context menu for renaming
     var renameItem = new MenuItem("Rename");
     renameItem.setOnAction(
-        e -> {
+        _ -> {
           var dialog = new TextInputDialog(getText());
           dialog.setTitle("Rename Tab");
           dialog.setHeaderText(null);
@@ -187,7 +187,7 @@ public class ChatTab extends Tab {
         });
     var closeItem = new MenuItem("Close");
     closeItem.setOnAction(
-        e -> {
+        _ -> {
           var tp = getTabPane();
           // Don't close if it's the last real tab (keep at least 1 besides the "+" tab)
           if (tp != null && tp.getTabs().size() > 2) {
@@ -247,9 +247,7 @@ public class ChatTab extends Tab {
     setText(directoryBasename(directory));
   }
 
-  public StatusBar getStatusBar() {
-    return statusBar;
-  }
+
 
   public List<StreamEvent.McpServer> getLastMcpServers() {
     return lastMcpServers;
@@ -342,7 +340,7 @@ public class ChatTab extends Tab {
   private List<StreamEvent.McpServer> lastMcpServers = List.of();
 
   private void handleSend(String message) {
-    launchProcess(message, false);
+    launchProcess(message);
   }
 
   private void handleQuestionAnswer(String answer) {
@@ -356,7 +354,7 @@ public class ChatTab extends Tab {
     }
   }
 
-  private void launchProcess(String message, boolean continueSession) {
+  private void launchProcess(String message) {
     chatView.addUserMessage(message);
     chatView.showThinkingIndicator();
     inputArea.setBusy(true);
@@ -365,13 +363,13 @@ public class ChatTab extends Tab {
     currentProcess = new ClaudeProcess();
     currentProcess.start(
         message,
-        continueSession ? null : sessionManager.getCurrentSessionId(),
+        sessionManager.getCurrentSessionId(),
         sessionManager.getWorkingDirectory(),
         permissionMode,
         "plan".equals(permissionMode),
         model,
         effort,
-        continueSession,
+        false,
         allowedTools,
         disallowedTools,
         mcpConfigPath,
@@ -442,14 +440,12 @@ public class ChatTab extends Tab {
         messageCount++;
       }
 
-      case StreamEvent.ToolUse toolUse -> {
-        chatView.addSystemMessage(toolUse.toolName(), "tool-use-message");
-      }
+      case StreamEvent.ToolUse toolUse ->
+          chatView.addSystemMessage(toolUse.toolName(), "tool-use-message");
 
-      case StreamEvent.ToolResult toolResult -> {
-        chatView.addSystemMessage(
-            "  Result: " + truncate(toolResult.output(), 200), "tool-use-message");
-      }
+      case StreamEvent.ToolResult toolResult ->
+          chatView.addSystemMessage(
+              "  Result: " + truncate(toolResult.output()), "tool-use-message");
 
       case StreamEvent.Error error -> {
         chatView.hideThinkingIndicator();
@@ -467,7 +463,7 @@ public class ChatTab extends Tab {
         }
       }
 
-      case StreamEvent.Unknown unknown -> {}
+      case StreamEvent.Unknown _ -> {}
     }
   }
 
@@ -490,9 +486,9 @@ public class ChatTab extends Tab {
     chatView.addSystemMessage("Cancelled", "system-info");
   }
 
-  private static String truncate(String s, int max) {
+  private static String truncate(String s) {
     if (s == null) return "";
-    return s.length() > max ? s.substring(0, max) + "..." : s;
+    return s.length() > 200 ? s.substring(0, 200) + "..." : s;
   }
 
   private void setupIpcFiles() {
@@ -568,7 +564,8 @@ public class ChatTab extends Tab {
     try {
       if (Files.exists(ipcDir)) {
         try (var walk = Files.walk(ipcDir)) {
-          walk.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
+          walk.sorted(java.util.Comparator.reverseOrder())
+              .forEach(p -> { var _ = p.toFile().delete(); });
         }
       }
     } catch (Exception ignored) {

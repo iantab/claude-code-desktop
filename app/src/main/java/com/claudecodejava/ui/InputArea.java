@@ -45,7 +45,7 @@ public class InputArea extends VBox {
     textArea
         .textProperty()
         .addListener(
-            (obs, old, newText) -> {
+            (_, _, newText) -> {
               int lineCount =
                   Math.max(MIN_ROWS, newText == null ? 1 : newText.split("\n", -1).length);
               lineCount = Math.min(lineCount, MAX_ROWS);
@@ -76,13 +76,13 @@ public class InputArea extends VBox {
 
     sendButton = new Button("Send");
     sendButton.getStyleClass().add("send-button");
-    sendButton.setOnAction(e -> send());
+    sendButton.setOnAction(_ -> send());
     Animations.addPressEffect(sendButton);
 
     cancelButton = new Button("Cancel");
     cancelButton.getStyleClass().add("cancel-button");
     cancelButton.setOnAction(
-        e -> {
+        _ -> {
           if (onCancel != null) onCancel.run();
         });
     Animations.addPressEffect(cancelButton);
@@ -103,7 +103,7 @@ public class InputArea extends VBox {
 
   /** Set the text area height (called by the resize divider in ChatTab). */
   public void setInputHeight(double height) {
-    double clamped = Math.max(MIN_HEIGHT, Math.min(MAX_HEIGHT, height));
+    double clamped = Math.clamp(height, MIN_HEIGHT, MAX_HEIGHT);
     textArea.setPrefHeight(clamped);
     textArea.setMinHeight(clamped);
     manualMinHeight = clamped;

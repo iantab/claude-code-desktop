@@ -12,7 +12,6 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 
 /** Top toolbar with directory chooser and mode selector. */
@@ -47,7 +46,7 @@ public class ToolBar extends HBox {
     directoryField.getStyleClass().add("directory-field");
     HBox.setHgrow(directoryField, Priority.ALWAYS);
     directoryField.setOnAction(
-        e -> {
+        _ -> {
           if (onDirectoryChanged != null) {
             onDirectoryChanged.accept(directoryField.getText().trim());
           }
@@ -56,7 +55,7 @@ public class ToolBar extends HBox {
     var browseButton = new Button("Browse");
     browseButton.getStyleClass().add("toolbar-button");
     browseButton.setTooltip(new Tooltip("Choose working directory"));
-    browseButton.setOnAction(e -> browseDirectory());
+    browseButton.setOnAction(_ -> browseDirectory());
 
     var dirGroup = new HBox(6, dirLabel, directoryField, browseButton);
     dirGroup.setAlignment(Pos.CENTER_LEFT);
@@ -75,7 +74,7 @@ public class ToolBar extends HBox {
     modelCombo.setPrefWidth(130);
 
     modelCombo.setOnAction(
-        e -> {
+        _ -> {
           if (CUSTOM_OPTION.equals(modelCombo.getValue())) {
             var dialog = new TextInputDialog();
             dialog.setTitle("Custom Model");
@@ -109,7 +108,7 @@ public class ToolBar extends HBox {
     effortCombo.setValue("high");
     effortCombo.getStyleClass().add("toolbar-combo");
     effortCombo.setOnAction(
-        e -> {
+        _ -> {
           if (onSettingsChanged != null) onSettingsChanged.run();
         });
 
@@ -121,7 +120,7 @@ public class ToolBar extends HBox {
     modeCombo.setValue("default");
     modeCombo.getStyleClass().add("toolbar-combo");
     modeCombo.setOnAction(
-        e -> {
+        _ -> {
           if (onSettingsChanged != null) onSettingsChanged.run();
         });
 
@@ -135,7 +134,7 @@ public class ToolBar extends HBox {
     toolsButton.getStyleClass().add("toolbar-button");
     toolsButton.setTooltip(new Tooltip("Configure tool permissions"));
     toolsButton.setOnAction(
-        e -> {
+        _ -> {
           if (onToolsConfig != null) onToolsConfig.run();
         });
 
@@ -143,7 +142,7 @@ public class ToolBar extends HBox {
     mcpButton.getStyleClass().add("toolbar-button");
     mcpButton.setTooltip(new Tooltip("Configure MCP servers"));
     mcpButton.setOnAction(
-        e -> {
+        _ -> {
           if (onMcpConfig != null) onMcpConfig.run();
         });
 
@@ -151,7 +150,7 @@ public class ToolBar extends HBox {
     historyButton.getStyleClass().add("toolbar-button");
     historyButton.setTooltip(new Tooltip("Toggle session history sidebar"));
     historyButton.setOnAction(
-        e -> {
+        _ -> {
           if (onSessionHistory != null) onSessionHistory.run();
         });
 
@@ -159,7 +158,7 @@ public class ToolBar extends HBox {
     usageButton.getStyleClass().add("toolbar-button");
     usageButton.setTooltip(new Tooltip("View rate limits and usage stats"));
     usageButton.setOnAction(
-        e -> {
+        _ -> {
           if (onUsage != null) onUsage.run();
         });
 
@@ -167,7 +166,7 @@ public class ToolBar extends HBox {
     pluginsButton.getStyleClass().add("toolbar-button");
     pluginsButton.setTooltip(new Tooltip("Manage plugins and marketplace"));
     pluginsButton.setOnAction(
-        e -> {
+        _ -> {
           if (onPlugins != null) onPlugins.run();
         });
 
@@ -235,10 +234,6 @@ public class ToolBar extends HBox {
 
   public void setOnSettingsChanged(Runnable onSettingsChanged) {
     this.onSettingsChanged = onSettingsChanged;
-  }
-
-  public boolean isPlanMode() {
-    return "plan".equals(modeCombo.getValue());
   }
 
   private void browseDirectory() {

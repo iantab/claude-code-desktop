@@ -13,14 +13,14 @@ public final class Animations {
   /** Adds a subtle scale-down press effect to a node (buttons, etc.). */
   public static void addPressEffect(Node node) {
     node.setOnMousePressed(
-        e -> {
+        _ -> {
           var scale = new ScaleTransition(Duration.millis(80), node);
           scale.setToX(0.96);
           scale.setToY(0.96);
           scale.play();
         });
     node.setOnMouseReleased(
-        e -> {
+        _ -> {
           var scale = new ScaleTransition(Duration.millis(80), node);
           scale.setToX(1.0);
           scale.setToY(1.0);
