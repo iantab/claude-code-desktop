@@ -30,6 +30,7 @@ public class ToolBar extends HBox {
   private Runnable onMcpConfig;
   private Runnable onSessionHistory;
   private Runnable onUsage;
+  private Runnable onPlugins;
   private Runnable onSettingsChanged;
 
   public ToolBar(String initialDirectory) {
@@ -162,14 +163,24 @@ public class ToolBar extends HBox {
           if (onUsage != null) onUsage.run();
         });
 
+    var pluginsButton = new Button("Plugins");
+    pluginsButton.getStyleClass().add("toolbar-button");
+    pluginsButton.setTooltip(new Tooltip("Manage plugins and marketplace"));
+    pluginsButton.setOnAction(
+        e -> {
+          if (onPlugins != null) onPlugins.run();
+        });
+
     // Press effects on action buttons
     Animations.addPressEffect(browseButton);
     Animations.addPressEffect(toolsButton);
     Animations.addPressEffect(mcpButton);
     Animations.addPressEffect(historyButton);
     Animations.addPressEffect(usageButton);
+    Animations.addPressEffect(pluginsButton);
 
-    var actionsGroup = new HBox(4, toolsButton, mcpButton, historyButton, usageButton);
+    var actionsGroup =
+        new HBox(4, toolsButton, mcpButton, pluginsButton, historyButton, usageButton);
     actionsGroup.setAlignment(Pos.CENTER_LEFT);
     actionsGroup.getStyleClass().add("toolbar-group");
 
@@ -216,6 +227,10 @@ public class ToolBar extends HBox {
 
   public void setOnUsage(Runnable onUsage) {
     this.onUsage = onUsage;
+  }
+
+  public void setOnPlugins(Runnable onPlugins) {
+    this.onPlugins = onPlugins;
   }
 
   public void setOnSettingsChanged(Runnable onSettingsChanged) {

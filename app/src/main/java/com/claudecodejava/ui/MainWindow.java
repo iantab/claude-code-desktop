@@ -46,6 +46,7 @@ public class MainWindow extends BorderPane {
     toolBar.setOnMcpConfig(this::showMcpConfig);
     toolBar.setOnSessionHistory(this::toggleSessionHistory);
     toolBar.setOnUsage(this::showUsage);
+    toolBar.setOnPlugins(this::showPlugins);
     toolBar.setOnSettingsChanged(
         () -> {
           var tab = getActiveTab();
@@ -165,6 +166,10 @@ public class MainWindow extends BorderPane {
       tab.loadSessionHistory(messages);
       tab.focusInput();
     }
+  }
+
+  private void showPlugins() {
+    new PluginDialog(getScene().getWindow()).show();
   }
 
   private void showUsage() {

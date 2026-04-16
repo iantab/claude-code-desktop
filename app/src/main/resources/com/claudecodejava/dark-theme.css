@@ -746,6 +746,120 @@
     -fx-background-color: #1e1e2e;
 }
 
+/* ===== Plugin Dialog ===== */
+.plugin-scroll {
+    -fx-background-color: #1e1e2e;
+    -fx-background: #1e1e2e;
+    -fx-border-color: transparent;
+}
+
+.plugin-scroll .viewport {
+    -fx-background-color: #1e1e2e;
+}
+
+.plugin-list {
+    -fx-background-color: #1e1e2e;
+}
+
+.plugin-card {
+    -fx-background-color: #2a2a3e;
+    -fx-background-radius: 8px;
+    -fx-padding: 10 12 10 12;
+}
+
+.plugin-card:hover {
+    -fx-background-color: #313244;
+}
+
+.plugin-name {
+    -fx-text-fill: #cdd6f4;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+.plugin-description {
+    -fx-text-fill: #6c7086;
+    -fx-font-size: 12px;
+}
+
+.plugin-category {
+    -fx-text-fill: #89b4fa;
+    -fx-font-size: 11px;
+    -fx-background-color: #313244;
+    -fx-background-radius: 4px;
+    -fx-padding: 2 6 2 6;
+}
+
+.plugin-status-enabled {
+    -fx-text-fill: #a6e3a1;
+    -fx-font-size: 12px;
+}
+
+.plugin-status-disabled {
+    -fx-text-fill: #6c7086;
+    -fx-font-size: 12px;
+}
+
+.plugin-status {
+    -fx-text-fill: #a6adc8;
+    -fx-font-size: 11px;
+}
+
+.plugin-install-button {
+    -fx-background-color: #a6e3a1;
+    -fx-text-fill: #1e1e2e;
+    -fx-font-weight: bold;
+    -fx-padding: 4 14 4 14;
+    -fx-background-radius: 6px;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}
+
+.plugin-install-button:hover {
+    -fx-background-color: #b8f0b4;
+}
+
+.plugin-install-button:pressed {
+    -fx-background-color: #94d18f;
+}
+
+.plugin-install-button:disabled {
+    -fx-background-color: #45475a;
+    -fx-text-fill: #6c7086;
+}
+
+.plugin-uninstall-button {
+    -fx-background-color: #45475a;
+    -fx-text-fill: #f38ba8;
+    -fx-padding: 4 12 4 12;
+    -fx-background-radius: 6px;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+}
+
+.plugin-uninstall-button:hover {
+    -fx-background-color: #585b70;
+}
+
+.plugin-uninstall-button:pressed {
+    -fx-background-color: #6c7086;
+}
+
+.plugin-search {
+    -fx-background-color: #2a2a3e;
+    -fx-text-fill: #cdd6f4;
+    -fx-prompt-text-fill: #585b70;
+    -fx-border-color: #45475a;
+    -fx-border-radius: 6px;
+    -fx-background-radius: 6px;
+    -fx-padding: 6 10 6 10;
+    -fx-font-size: 12px;
+}
+
+.plugin-search:focused {
+    -fx-border-color: #89b4fa;
+}
+
 /* ===== Status Bar ===== */
 .status-bar {
     -fx-background-color: #181825;
