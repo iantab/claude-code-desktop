@@ -55,7 +55,10 @@ public class InputArea extends VBox {
 
     textArea.setOnKeyPressed(
         e -> {
-          if (e.getCode() == KeyCode.ENTER && !e.isShiftDown()) {
+          if (e.getCode() == KeyCode.ENTER && e.isShiftDown()) {
+            e.consume();
+            textArea.insertText(textArea.getCaretPosition(), "\n");
+          } else if (e.getCode() == KeyCode.ENTER) {
             e.consume();
             send();
           } else if (e.getCode() == KeyCode.ESCAPE) {
