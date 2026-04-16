@@ -75,7 +75,7 @@ public class SessionHistoryView extends ScrollPane {
       btn.getStyleClass().add("session-item");
       VBox.setVgrow(btn, Priority.NEVER);
 
-      String label = session.timestamp() + "\n" + truncate(session.preview(), 60);
+      String label = session.timestamp() + "\n" + TextUtils.truncate(session.preview(), 60);
       btn.setText(label);
       btn.setWrapText(true);
 
@@ -84,19 +84,20 @@ public class SessionHistoryView extends ScrollPane {
     }
   }
 
-  private List<SessionInfo> scanSessions(String workingDirectory) {
-    var sessions = new ArrayList<SessionInfo>();
-
-    // Convert working directory to Claude's project path format
+  private static Path resolveProjectDir(String workingDirectory) {
     String dirPath = workingDirectory.replace(":", "-").replace("/", "-").replace("\\", "-");
     if (dirPath.startsWith("-")) dirPath = dirPath.substring(1);
     Path projectDir =
         Path.of(System.getProperty("user.home"), ".claude", "projects", "C-" + dirPath);
-
     if (!Files.isDirectory(projectDir)) {
-      // Try without C- prefix
       projectDir = Path.of(System.getProperty("user.home"), ".claude", "projects", dirPath);
     }
+    return projectDir;
+  }
+
+  private List<SessionInfo> scanSessions(String workingDirectory) {
+    var sessions = new ArrayList<SessionInfo>();
+    Path projectDir = resolveProjectDir(workingDirectory);
 
     if (!Files.isDirectory(projectDir)) return sessions;
 
@@ -158,16 +159,7 @@ public class SessionHistoryView extends ScrollPane {
   /** Parse full conversation from a session JSONL file. */
   public static List<ChatMessage> loadConversation(String workingDirectory, String sessionId) {
     var messages = new ArrayList<ChatMessage>();
-
-    String dirPath = workingDirectory.replace(":", "-").replace("/", "-").replace("\\", "-");
-    if (dirPath.startsWith("-")) dirPath = dirPath.substring(1);
-    Path projectDir =
-        Path.of(System.getProperty("user.home"), ".claude", "projects", "C-" + dirPath);
-
-    if (!Files.isDirectory(projectDir)) {
-      projectDir = Path.of(System.getProperty("user.home"), ".claude", "projects", dirPath);
-    }
-
+    Path projectDir = resolveProjectDir(workingDirectory);
     Path sessionFile = projectDir.resolve(sessionId + ".jsonl");
     if (!Files.isRegularFile(sessionFile)) return messages;
 
@@ -209,8 +201,4 @@ public class SessionHistoryView extends ScrollPane {
     return messages;
   }
 
-  private static String truncate(String s, int max) {
-    if (s == null) return "";
-    return s.length() > max ? s.substring(0, max) + "..." : s;
-  }
 }

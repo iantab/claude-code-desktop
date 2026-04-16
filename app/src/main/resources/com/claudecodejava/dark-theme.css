@@ -101,6 +101,7 @@
 .chat-tab-pane .tab .tab-label {
     -fx-text-fill: #6c7086;
     -fx-font-size: 12px;
+    -fx-padding: 0 8 0 0;
 }
 
 .chat-tab-pane .tab:selected .tab-label {
@@ -118,7 +119,9 @@
 
 .chat-tab-pane .tab-close-button {
     -fx-background-color: #585b70;
-    -fx-shape: "M 0 0 L 4 4 M 4 0 L 0 4";
+    -fx-pref-width: 10;
+    -fx-pref-height: 10;
+    -fx-cursor: hand;
 }
 
 .chat-tab-pane .tab-close-button:hover {
@@ -858,6 +861,27 @@
 
 .plugin-search:focused {
     -fx-border-color: #89b4fa;
+}
+
+.plugin-meta {
+    -fx-text-fill: #6c7086;
+    -fx-font-size: 11px;
+}
+
+.plugin-header {
+    -fx-background-color: #181825;
+    -fx-border-color: #313244;
+    -fx-border-width: 0 0 1 0;
+}
+
+.plugin-footer {
+    -fx-background-color: #181825;
+    -fx-border-color: #313244;
+    -fx-border-width: 1 0 0 0;
+}
+
+.text-danger {
+    -fx-text-fill: #f38ba8;
 }
 
 /* ===== Status Bar ===== */

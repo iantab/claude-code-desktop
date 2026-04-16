@@ -27,6 +27,7 @@ public class MainWindow extends BorderPane {
     getStyleClass().add("main-window");
 
     tabPane = new TabPane();
+    tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.ALL_TABS);
     tabPane.getStyleClass().add("chat-tab-pane");
     VBox.setVgrow(tabPane, Priority.ALWAYS);
 

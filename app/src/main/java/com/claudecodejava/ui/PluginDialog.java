@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -27,6 +28,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -35,11 +37,16 @@ import javafx.stage.Window;
 public class PluginDialog {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final int CLI_TIMEOUT_SECONDS = 30;
+
   private final Stage stage;
   private final VBox installedList;
   private final VBox marketplaceList;
   private final Label statusLabel;
   private final ProgressIndicator spinner;
+  private final List<JsonNode> allMarketplacePlugins = new ArrayList<>();
+  private final Map<String, Integer> installCounts = new HashMap<>();
+  private final List<String> installedIds = new ArrayList<>();
 
   public PluginDialog(Window owner) {
     stage = new Stage();
@@ -56,27 +63,21 @@ public class PluginDialog {
 
     // === Header ===
     var titleLabel = new Label("Plugins");
-    titleLabel.getStyleClass().add("welcome-title");
-    titleLabel.setStyle("-fx-font-size: 16px;");
+    titleLabel.getStyleClass().addAll("plugin-name");
 
-    var headerSpacer = new Region();
-    HBox.setHgrow(headerSpacer, Priority.ALWAYS);
-
-    var header = new HBox(titleLabel, headerSpacer);
+    var header = new HBox(titleLabel);
     header.setAlignment(Pos.CENTER_LEFT);
     header.setPadding(new Insets(12, 16, 8, 16));
-    header.getStyleClass().add("toolbar");
-    header.setStyle(
-        "-fx-background-color: #181825; -fx-border-color: #313244; -fx-border-width: 0 0 1 0;");
+    header.getStyleClass().add("plugin-header");
 
     // === Installed tab ===
     installedList = new VBox(6);
     installedList.setPadding(new Insets(8));
-    installedList.setStyle("-fx-background-color: #1e1e2e;");
+    installedList.getStyleClass().add("plugin-list");
 
     var installedScroll = new ScrollPane(installedList);
     installedScroll.setFitToWidth(true);
-    installedScroll.setStyle("-fx-background-color: #1e1e2e; -fx-background: #1e1e2e;");
+    installedScroll.getStyleClass().add("plugin-scroll");
 
     var installedPane = new VBox(installedScroll);
     VBox.setVgrow(installedScroll, Priority.ALWAYS);
@@ -84,16 +85,16 @@ public class PluginDialog {
     // === Marketplace tab ===
     var searchField = new TextField();
     searchField.setPromptText("Search plugins...");
-    searchField.getStyleClass().add("directory-field");
+    searchField.getStyleClass().add("plugin-search");
     searchField.textProperty().addListener((_, _, text) -> filterMarketplace(text));
 
     marketplaceList = new VBox(6);
     marketplaceList.setPadding(new Insets(8));
-    marketplaceList.setStyle("-fx-background-color: #1e1e2e;");
+    marketplaceList.getStyleClass().add("plugin-list");
 
     var marketplaceScroll = new ScrollPane(marketplaceList);
     marketplaceScroll.setFitToWidth(true);
-    marketplaceScroll.setStyle("-fx-background-color: #1e1e2e; -fx-background: #1e1e2e;");
+    marketplaceScroll.getStyleClass().add("plugin-scroll");
 
     var marketplacePane = new VBox(8, searchField, marketplaceScroll);
     marketplacePane.setPadding(new Insets(8, 8, 0, 8));
@@ -125,8 +126,7 @@ public class PluginDialog {
     var footer = new HBox(8, statusLabel, spinner, footerSpacer, reloadButton, closeButton);
     footer.setAlignment(Pos.CENTER_LEFT);
     footer.setPadding(new Insets(6, 16, 6, 16));
-    footer.setStyle(
-        "-fx-background-color: #181825; -fx-border-color: #313244; -fx-border-width: 1 0 0 0;");
+    footer.getStyleClass().add("plugin-footer");
 
     // === Root ===
     var root = new BorderPane();
@@ -140,7 +140,6 @@ public class PluginDialog {
     if (css != null) scene.getStylesheets().add(css.toExternalForm());
     stage.setScene(scene);
 
-    // Load data
     loadInstalled();
     loadMarketplace();
   }
@@ -153,9 +152,7 @@ public class PluginDialog {
 
   private void loadInstalled() {
     installedList.getChildren().clear();
-    var loading = new Label("Loading installed plugins...");
-    loading.setStyle("-fx-text-fill: #6c7086; -fx-font-size: 12px;");
-    installedList.getChildren().add(loading);
+    installedList.getChildren().add(createInfoLabel("Loading installed plugins..."));
 
     Thread.ofVirtual()
         .name("plugin-list")
@@ -168,9 +165,7 @@ public class PluginDialog {
                     () -> {
                       installedList.getChildren().clear();
                       if (!plugins.isArray() || plugins.isEmpty()) {
-                        var empty = new Label("No plugins installed");
-                        empty.setStyle("-fx-text-fill: #6c7086; -fx-font-size: 12px;");
-                        installedList.getChildren().add(empty);
+                        installedList.getChildren().add(createInfoLabel("No plugins installed"));
                         return;
                       }
                       for (JsonNode p : plugins) {
@@ -189,71 +184,18 @@ public class PluginDialog {
             });
   }
 
-  private final List<JsonNode> allMarketplacePlugins = new ArrayList<>();
-  private final Map<String, Integer> installCounts = new HashMap<>();
-  private final List<String> installedIds = new ArrayList<>();
-
   private void loadMarketplace() {
     marketplaceList.getChildren().clear();
-    var loading = new Label("Loading marketplace...");
-    loading.setStyle("-fx-text-fill: #6c7086; -fx-font-size: 12px;");
-    marketplaceList.getChildren().add(loading);
+    marketplaceList.getChildren().add(createInfoLabel("Loading marketplace..."));
 
     Thread.ofVirtual()
         .name("marketplace-load")
         .start(
             () -> {
               try {
-                var countsPath =
-                    Path.of(
-                        System.getProperty("user.home"),
-                        ".claude",
-                        "plugins",
-                        "install-counts-cache.json");
-                if (Files.exists(countsPath)) {
-                  var countsNode = MAPPER.readTree(Files.readString(countsPath));
-                  var counts = countsNode.path("counts");
-                  if (counts.isArray()) {
-                    for (JsonNode c : counts) {
-                      String plugin = c.path("plugin").asText("");
-                      int installs = c.path("unique_installs").asInt(0);
-                      String name = plugin.contains("@") ? plugin.split("@")[0] : plugin;
-                      installCounts.put(name, installs);
-                    }
-                  }
-                }
-
-                var installedResult = runCli("plugin", "list", "--json");
-                var installedArr = MAPPER.readTree(installedResult);
-                installedIds.clear();
-                if (installedArr.isArray()) {
-                  for (JsonNode p : installedArr) {
-                    String id = p.path("id").asText("");
-                    String name = id.contains("@") ? id.split("@")[0] : id;
-                    installedIds.add(name);
-                  }
-                }
-
-                var marketplacePath =
-                    Path.of(
-                        System.getProperty("user.home"),
-                        ".claude",
-                        "plugins",
-                        "marketplaces",
-                        "claude-plugins-official",
-                        ".claude-plugin",
-                        "marketplace.json");
-
-                allMarketplacePlugins.clear();
-                if (Files.exists(marketplacePath)) {
-                  var root = MAPPER.readTree(Files.readString(marketplacePath));
-                  var plugins = root.path("plugins");
-                  if (plugins.isArray()) {
-                    for (JsonNode p : plugins) {
-                      allMarketplacePlugins.add(p);
-                    }
-                  }
-                }
+                loadInstallCounts();
+                loadInstalledIds();
+                loadMarketplacePlugins();
 
                 allMarketplacePlugins.sort(
                     (a, b) -> {
@@ -275,6 +217,48 @@ public class PluginDialog {
             });
   }
 
+  private void loadInstallCounts() throws Exception {
+    var path =
+        Path.of(System.getProperty("user.home"), ".claude", "plugins", "install-counts-cache.json");
+    if (!Files.exists(path)) return;
+    var counts = MAPPER.readTree(Files.readString(path)).path("counts");
+    if (!counts.isArray()) return;
+    for (JsonNode c : counts) {
+      String plugin = c.path("plugin").asText("");
+      String name = plugin.contains("@") ? plugin.split("@")[0] : plugin;
+      installCounts.put(name, c.path("unique_installs").asInt(0));
+    }
+  }
+
+  private void loadInstalledIds() throws Exception {
+    var arr = MAPPER.readTree(runCli("plugin", "list", "--json"));
+    installedIds.clear();
+    if (!arr.isArray()) return;
+    for (JsonNode p : arr) {
+      String id = p.path("id").asText("");
+      installedIds.add(id.contains("@") ? id.split("@")[0] : id);
+    }
+  }
+
+  private void loadMarketplacePlugins() throws Exception {
+    var path =
+        Path.of(
+            System.getProperty("user.home"),
+            ".claude",
+            "plugins",
+            "marketplaces",
+            "claude-plugins-official",
+            ".claude-plugin",
+            "marketplace.json");
+    allMarketplacePlugins.clear();
+    if (!Files.exists(path)) return;
+    var plugins = MAPPER.readTree(Files.readString(path)).path("plugins");
+    if (!plugins.isArray()) return;
+    for (JsonNode p : plugins) {
+      allMarketplacePlugins.add(p);
+    }
+  }
+
   private void filterMarketplace(String query) {
     renderMarketplace(query == null ? "" : query.trim().toLowerCase());
   }
@@ -291,13 +275,10 @@ public class PluginDialog {
         continue;
       }
       marketplaceList.getChildren().add(createMarketplaceCard(p));
-      shown++;
-      if (shown >= 100) break;
+      if (++shown >= 100) break;
     }
     if (shown == 0) {
-      var empty = new Label("No plugins found");
-      empty.setStyle("-fx-text-fill: #6c7086; -fx-font-size: 12px;");
-      marketplaceList.getChildren().add(empty);
+      marketplaceList.getChildren().add(createInfoLabel("No plugins found"));
     }
   }
 
@@ -311,26 +292,24 @@ public class PluginDialog {
     String scope = plugin.path("scope").asText("user");
 
     var nameLabel = new Label(name);
-    nameLabel.setStyle("-fx-text-fill: #cdd6f4; -fx-font-weight: bold; -fx-font-size: 13px;");
+    nameLabel.getStyleClass().add("plugin-name");
 
     var sourceLabel = new Label(source + "  ·  " + scope);
-    sourceLabel.setStyle("-fx-text-fill: #6c7086; -fx-font-size: 11px;");
+    sourceLabel.getStyleClass().add("plugin-meta");
 
     var statusDot = new Label(enabled ? "● Enabled" : "○ Disabled");
-    statusDot.setTextFill(javafx.scene.paint.Color.web(enabled ? "#a6e3a1" : "#6c7086"));
+    statusDot.getStyleClass().add(enabled ? "plugin-status-enabled" : "plugin-status-disabled");
 
     var toggleBtn = new Button(enabled ? "Disable" : "Enable");
     toggleBtn.getStyleClass().add("toolbar-button");
-    toggleBtn.setOnAction(
-        _ -> runPluginCommand(enabled ? "disable" : "enable", id, toggleBtn));
+    toggleBtn.setOnAction(_ -> runPluginCommand(enabled ? "disable" : "enable", id, toggleBtn));
 
     var updateBtn = new Button("Update");
     updateBtn.getStyleClass().add("toolbar-button");
     updateBtn.setOnAction(_ -> runPluginCommand("update", id, updateBtn));
 
     var uninstallBtn = new Button("Uninstall");
-    uninstallBtn.getStyleClass().add("toolbar-button");
-    uninstallBtn.setStyle("-fx-text-fill: #f38ba8;");
+    uninstallBtn.getStyleClass().addAll("toolbar-button", "text-danger");
     uninstallBtn.setOnAction(_ -> runPluginCommand("uninstall", id, uninstallBtn));
 
     var spacer = new Region();
@@ -340,8 +319,7 @@ public class PluginDialog {
     topRow.setAlignment(Pos.CENTER_LEFT);
 
     var card = new VBox(4, topRow, sourceLabel);
-    card.setStyle(
-        "-fx-background-color: #2a2a3e; -fx-background-radius: 8px; -fx-padding: 10 12 10 12;");
+    card.getStyleClass().add("plugin-card");
     return card;
   }
 
@@ -353,26 +331,24 @@ public class PluginDialog {
     boolean alreadyInstalled = installedIds.contains(name);
 
     var nameLabel = new Label(name);
-    nameLabel.setStyle("-fx-text-fill: #cdd6f4; -fx-font-weight: bold; -fx-font-size: 13px;");
+    nameLabel.getStyleClass().add("plugin-name");
 
-    var categoryLabel = new Label(category.isEmpty() ? "" : category);
-    categoryLabel.setStyle(
-        "-fx-text-fill: #89b4fa; -fx-font-size: 11px; -fx-background-color: #313244;"
-            + " -fx-background-radius: 4px; -fx-padding: 1 6 1 6;");
+    var categoryLabel = new Label(category);
+    categoryLabel.getStyleClass().add("plugin-category");
     categoryLabel.setVisible(!category.isEmpty());
     categoryLabel.setManaged(!category.isEmpty());
 
     var installsLabel = new Label(installs > 0 ? formatInstalls(installs) + " installs" : "");
-    installsLabel.setStyle("-fx-text-fill: #585b70; -fx-font-size: 11px;");
+    installsLabel.getStyleClass().add("plugin-meta");
 
     var spacer = new Region();
     HBox.setHgrow(spacer, Priority.ALWAYS);
 
     var installBtn = new Button(alreadyInstalled ? "Installed" : "Install");
-    installBtn.getStyleClass().add("toolbar-button");
-    if (!alreadyInstalled) {
-      installBtn.setStyle(
-          "-fx-background-color: #a6e3a1; -fx-text-fill: #1e1e2e; -fx-font-weight: bold;");
+    if (alreadyInstalled) {
+      installBtn.getStyleClass().add("toolbar-button");
+    } else {
+      installBtn.getStyleClass().add("plugin-install-button");
     }
     installBtn.setDisable(alreadyInstalled);
     installBtn.setOnAction(_ -> runPluginCommand("install", name, installBtn));
@@ -381,13 +357,18 @@ public class PluginDialog {
     topRow.setAlignment(Pos.CENTER_LEFT);
 
     var descLabel = new Label(desc);
-    descLabel.setStyle("-fx-text-fill: #6c7086; -fx-font-size: 12px;");
+    descLabel.getStyleClass().add("plugin-description");
     descLabel.setWrapText(true);
 
     var card = new VBox(4, topRow, descLabel);
-    card.setStyle(
-        "-fx-background-color: #2a2a3e; -fx-background-radius: 8px; -fx-padding: 10 12 10 12;");
+    card.getStyleClass().add("plugin-card");
     return card;
+  }
+
+  private static Label createInfoLabel(String text) {
+    var label = new Label(text);
+    label.getStyleClass().add("plugin-description");
+    return label;
   }
 
   // --- CLI helpers ---
@@ -459,21 +440,29 @@ public class PluginDialog {
     var pb = new ProcessBuilder(cmd);
     pb.redirectErrorStream(true);
     var proc = pb.start();
-
-    var sb = new StringBuilder();
-    try (var reader =
-        new BufferedReader(new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
-      String line;
-      while ((line = reader.readLine()) != null) {
-        sb.append(line).append("\n");
+    try {
+      var sb = new StringBuilder();
+      try (var reader =
+          new BufferedReader(
+              new InputStreamReader(proc.getInputStream(), StandardCharsets.UTF_8))) {
+        String line;
+        while ((line = reader.readLine()) != null) {
+          sb.append(line).append("\n");
+        }
       }
+      if (!proc.waitFor(CLI_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+        proc.destroyForcibly();
+        throw new RuntimeException("Command timed out");
+      }
+      int exit = proc.exitValue();
+      if (exit != 0) {
+        String output = sb.toString().trim();
+        throw new RuntimeException(output.isEmpty() ? "exit code " + exit : output);
+      }
+      return sb.toString();
+    } finally {
+      if (proc.isAlive()) proc.destroyForcibly();
     }
-    int exit = proc.waitFor();
-    if (exit != 0) {
-      String output = sb.toString().trim();
-      throw new RuntimeException(output.isEmpty() ? "exit code " + exit : output);
-    }
-    return sb.toString();
   }
 
   private static String formatInstalls(int count) {

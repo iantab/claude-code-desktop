@@ -70,6 +70,13 @@ public class ChatTab extends Tab {
 
     setText(directoryBasename(directory));
     setClosable(true);
+    setOnCloseRequest(
+        e -> {
+          var tp = getTabPane();
+          if (tp != null && tp.getTabs().size() <= 2) {
+            e.consume(); // Don't close the last chat tab
+          }
+        });
 
     chatView = new ChatView();
 
@@ -445,7 +452,7 @@ public class ChatTab extends Tab {
 
       case StreamEvent.ToolResult toolResult ->
           chatView.addSystemMessage(
-              "  Result: " + truncate(toolResult.output()), "tool-use-message");
+              "  Result: " + TextUtils.truncate(toolResult.output(), 200), "tool-use-message");
 
       case StreamEvent.Error error -> {
         chatView.hideThinkingIndicator();
@@ -486,10 +493,6 @@ public class ChatTab extends Tab {
     chatView.addSystemMessage("Cancelled", "system-info");
   }
 
-  private static String truncate(String s) {
-    if (s == null) return "";
-    return s.length() > 200 ? s.substring(0, 200) + "..." : s;
-  }
 
   private void setupIpcFiles() {
     try {
