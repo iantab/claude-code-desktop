@@ -9,8 +9,10 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.stage.DirectoryChooser;
 
 /** Top toolbar with directory chooser and mode selector. */
@@ -31,13 +33,13 @@ public class ToolBar extends HBox {
   private Runnable onSettingsChanged;
 
   public ToolBar(String initialDirectory) {
-    setSpacing(10);
-    setPadding(new Insets(8, 16, 8, 16));
+    setSpacing(8);
+    setPadding(new Insets(6, 12, 6, 12));
     setAlignment(Pos.CENTER_LEFT);
     getStyleClass().add("toolbar");
 
-    // Directory section
-    var dirLabel = new Label("Directory:");
+    // === Left group: Directory ===
+    var dirLabel = new Label("Dir");
     dirLabel.getStyleClass().add("toolbar-label");
 
     directoryField = new TextField(initialDirectory);
@@ -52,30 +54,24 @@ public class ToolBar extends HBox {
 
     var browseButton = new Button("Browse");
     browseButton.getStyleClass().add("toolbar-button");
+    browseButton.setTooltip(new Tooltip("Choose working directory"));
     browseButton.setOnAction(e -> browseDirectory());
 
-    // Permission / mode selector
-    var modeLabel = new Label("Mode:");
-    modeLabel.getStyleClass().add("toolbar-label");
+    var dirGroup = new HBox(6, dirLabel, directoryField, browseButton);
+    dirGroup.setAlignment(Pos.CENTER_LEFT);
+    dirGroup.getStyleClass().add("toolbar-group");
+    HBox.setHgrow(dirGroup, Priority.ALWAYS);
+    HBox.setHgrow(directoryField, Priority.ALWAYS);
 
-    modeCombo = new ComboBox<>();
-    modeCombo.getItems().addAll("default", "plan", "acceptEdits", "auto", "bypassPermissions");
-    modeCombo.setValue("default");
-    modeCombo.getStyleClass().add("toolbar-combo");
-    modeCombo.setOnAction(
-        e -> {
-          if (onSettingsChanged != null) onSettingsChanged.run();
-        });
-
-    // Model selector
-    var modelLabel = new Label("Model:");
+    // === Center group: Model settings ===
+    var modelLabel = new Label("Model");
     modelLabel.getStyleClass().add("toolbar-label");
 
     modelCombo = new ComboBox<>();
     modelCombo.getItems().addAll("sonnet", "opus", "haiku", CUSTOM_OPTION);
     modelCombo.setValue("sonnet");
     modelCombo.getStyleClass().add("toolbar-combo");
-    modelCombo.setPrefWidth(140);
+    modelCombo.setPrefWidth(130);
 
     modelCombo.setOnAction(
         e -> {
@@ -89,7 +85,6 @@ public class ToolBar extends HBox {
             var result = dialog.showAndWait();
             if (result.isPresent() && !result.get().isBlank()) {
               String custom = result.get().trim();
-              // Add before "Custom..." if not already present
               if (!modelCombo.getItems().contains(custom)) {
                 int idx = modelCombo.getItems().indexOf(CUSTOM_OPTION);
                 modelCombo.getItems().add(idx, custom);
@@ -97,7 +92,6 @@ public class ToolBar extends HBox {
               modelCombo.setValue(custom);
               previousModel = custom;
             } else {
-              // Cancelled - revert
               modelCombo.setValue(previousModel);
             }
           } else {
@@ -106,8 +100,7 @@ public class ToolBar extends HBox {
           if (onSettingsChanged != null) onSettingsChanged.run();
         });
 
-    // Effort level
-    var effortLabel = new Label("Effort:");
+    var effortLabel = new Label("Effort");
     effortLabel.getStyleClass().add("toolbar-label");
 
     effortCombo = new ComboBox<>();
@@ -119,9 +112,27 @@ public class ToolBar extends HBox {
           if (onSettingsChanged != null) onSettingsChanged.run();
         });
 
-    // Config buttons
+    var modeLabel = new Label("Mode");
+    modeLabel.getStyleClass().add("toolbar-label");
+
+    modeCombo = new ComboBox<>();
+    modeCombo.getItems().addAll("default", "plan", "acceptEdits", "auto", "bypassPermissions");
+    modeCombo.setValue("default");
+    modeCombo.getStyleClass().add("toolbar-combo");
+    modeCombo.setOnAction(
+        e -> {
+          if (onSettingsChanged != null) onSettingsChanged.run();
+        });
+
+    var settingsGroup =
+        new HBox(6, modelLabel, modelCombo, effortLabel, effortCombo, modeLabel, modeCombo);
+    settingsGroup.setAlignment(Pos.CENTER_LEFT);
+    settingsGroup.getStyleClass().add("toolbar-group");
+
+    // === Right group: Action buttons ===
     var toolsButton = new Button("Tools");
     toolsButton.getStyleClass().add("toolbar-button");
+    toolsButton.setTooltip(new Tooltip("Configure tool permissions"));
     toolsButton.setOnAction(
         e -> {
           if (onToolsConfig != null) onToolsConfig.run();
@@ -129,6 +140,7 @@ public class ToolBar extends HBox {
 
     var mcpButton = new Button("MCP");
     mcpButton.getStyleClass().add("toolbar-button");
+    mcpButton.setTooltip(new Tooltip("Configure MCP servers"));
     mcpButton.setOnAction(
         e -> {
           if (onMcpConfig != null) onMcpConfig.run();
@@ -136,6 +148,7 @@ public class ToolBar extends HBox {
 
     var historyButton = new Button("History");
     historyButton.getStyleClass().add("toolbar-button");
+    historyButton.setTooltip(new Tooltip("Toggle session history sidebar"));
     historyButton.setOnAction(
         e -> {
           if (onSessionHistory != null) onSessionHistory.run();
@@ -143,30 +156,24 @@ public class ToolBar extends HBox {
 
     var usageButton = new Button("Usage");
     usageButton.getStyleClass().add("toolbar-button");
+    usageButton.setTooltip(new Tooltip("View rate limits and usage stats"));
     usageButton.setOnAction(
         e -> {
           if (onUsage != null) onUsage.run();
         });
 
-    getChildren()
-        .addAll(
-            dirLabel,
-            directoryField,
-            browseButton,
-            createSeparator(),
-            modelLabel,
-            modelCombo,
-            createSeparator(),
-            effortLabel,
-            effortCombo,
-            createSeparator(),
-            modeLabel,
-            modeCombo,
-            createSeparator(),
-            toolsButton,
-            mcpButton,
-            historyButton,
-            usageButton);
+    // Press effects on action buttons
+    Animations.addPressEffect(browseButton);
+    Animations.addPressEffect(toolsButton);
+    Animations.addPressEffect(mcpButton);
+    Animations.addPressEffect(historyButton);
+    Animations.addPressEffect(usageButton);
+
+    var actionsGroup = new HBox(4, toolsButton, mcpButton, historyButton, usageButton);
+    actionsGroup.setAlignment(Pos.CENTER_LEFT);
+    actionsGroup.getStyleClass().add("toolbar-group");
+
+    getChildren().addAll(dirGroup, settingsGroup, actionsGroup);
   }
 
   public void setOnDirectoryChanged(Consumer<String> onDirectoryChanged) {
@@ -240,9 +247,4 @@ public class ToolBar extends HBox {
     }
   }
 
-  private Label createSeparator() {
-    var sep = new Label("|");
-    sep.getStyleClass().add("toolbar-separator");
-    return sep;
-  }
 }

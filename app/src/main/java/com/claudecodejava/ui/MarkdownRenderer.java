@@ -43,7 +43,7 @@ public class MarkdownRenderer {
                     font-family: 'Cascadia Mono', 'Cascadia Code', 'JetBrains Mono', 'Fira Code', Consolas, monospace;
                     font-size: 13px;
                     line-height: 1.6;
-                    color: #d4d4d4;
+                    color: #cdd6f4;
                     background: transparent;
                     padding: 8px 0;
                     word-wrap: break-word;
@@ -54,14 +54,15 @@ public class MarkdownRenderer {
                 code {
                     font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
                     font-size: 13px;
-                    background: #2d2d2d;
+                    background: #313244;
                     padding: 2px 6px;
                     border-radius: 4px;
-                    color: #ce9178;
+                    color: #fab387;
                 }
                 pre {
-                    background: #1a1a2e;
-                    border: 1px solid #333;
+                    background: #181825;
+                    border: 1px solid #45475a;
+                    border-left: 3px solid #89b4fa;
                     border-radius: 8px;
                     padding: 12px 16px;
                     margin: 8px 0;
@@ -70,25 +71,25 @@ public class MarkdownRenderer {
                 pre code {
                     background: transparent;
                     padding: 0;
-                    color: #d4d4d4;
+                    color: #cdd6f4;
                     font-size: 13px;
                 }
                 h1, h2, h3, h4 {
-                    color: #e0e0e0;
+                    color: #cdd6f4;
                     margin: 12px 0 6px 0;
                 }
                 h1 { font-size: 1.4em; }
                 h2 { font-size: 1.2em; }
                 h3 { font-size: 1.1em; }
-                a { color: #569cd6; text-decoration: none; }
-                a:hover { text-decoration: underline; }
+                a { color: #89b4fa; text-decoration: none; }
+                a:hover { text-decoration: underline; color: #b4d0fb; }
                 ul, ol { margin: 4px 0 8px 24px; }
                 li { margin-bottom: 2px; }
                 blockquote {
-                    border-left: 3px solid #569cd6;
+                    border-left: 3px solid #89b4fa;
                     padding-left: 12px;
                     margin: 8px 0;
-                    color: #999;
+                    color: #a6adc8;
                 }
                 table {
                     border-collapse: collapse;
@@ -96,19 +97,19 @@ public class MarkdownRenderer {
                     width: 100%%;
                 }
                 th, td {
-                    border: 1px solid #444;
+                    border: 1px solid #45475a;
                     padding: 6px 12px;
                     text-align: left;
                 }
-                th { background: #2d2d2d; color: #e0e0e0; }
-                strong { color: #e0e0e0; }
-                hr { border: none; border-top: 1px solid #444; margin: 12px 0; }
+                th { background: #313244; color: #cdd6f4; }
+                strong { color: #cdd6f4; }
+                hr { border: none; border-top: 1px solid #45475a; margin: 12px 0; }
 
                 /* Simple syntax highlighting */
-                .keyword { color: #569cd6; }
-                .string { color: #ce9178; }
-                .comment { color: #6a9955; }
-                .number { color: #b5cea8; }
+                .keyword { color: #89b4fa; }
+                .string { color: #fab387; }
+                .comment { color: #a6e3a1; }
+                .number { color: #fab387; }
                 </style>
                 </head>
                 <body>

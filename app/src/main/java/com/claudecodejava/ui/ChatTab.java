@@ -16,11 +16,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javafx.application.Platform;
+import javafx.scene.Cursor;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TextInputDialog;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.layout.VBox;
 
 /** A single chat tab with its own session, chat view, input area, and status bar. */
@@ -77,8 +81,91 @@ public class ChatTab extends Tab {
 
     var chatContainer = chatView.getContainer();
     VBox.setVgrow(chatContainer, Priority.ALWAYS);
-    var container = new VBox(chatContainer, inputArea, statusBar);
+    chatContainer.setMinHeight(0);
+
+    // Clip the chatContainer to its bounds so WebView native windows
+    // don't extend beyond and steal mouse events from the divider below.
+    var chatClip = new Rectangle();
+    chatClip.widthProperty().bind(chatContainer.widthProperty());
+    chatClip.heightProperty().bind(chatContainer.heightProperty());
+    chatContainer.setClip(chatClip);
+
+    // Visual-only divider bar between chat and input
+    var resizeDivider = new Region();
+    resizeDivider.setPrefHeight(6);
+    resizeDivider.setMinHeight(6);
+    resizeDivider.setMaxHeight(6);
+    resizeDivider.setMouseTransparent(true); // events handled by container filters
+    resizeDivider.setStyle("-fx-background-color: #313244;");
+
+    var container = new VBox(chatContainer, resizeDivider, inputArea, statusBar);
     setContent(container);
+
+    // Resize via container-level event filters (capturing phase).
+    // This bypasses WebView's native event interception because filters
+    // fire parent-first, before any child (including WebView) processes events.
+    final double[] dragState = new double[2]; // [startScreenY, startHeight]
+    final boolean[] resizing = {false};
+    final double RESIZE_ZONE = 8.0;
+
+    // Use scene coordinates for all boundary checks -- e.getY() is relative to the
+    // pick target node (which varies), but e.getSceneY() is always absolute.
+    container.addEventFilter(
+        MouseEvent.MOUSE_MOVED,
+        e -> {
+          var dividerInScene = resizeDivider.localToScene(0, 0);
+          if (dividerInScene == null) return;
+          double dividerSceneY = dividerInScene.getY();
+          double dividerSceneBottom = dividerSceneY + resizeDivider.getHeight();
+          double mouseY = e.getSceneY();
+          if (mouseY >= dividerSceneY - RESIZE_ZONE
+              && mouseY <= dividerSceneBottom + RESIZE_ZONE) {
+            container.setCursor(Cursor.N_RESIZE);
+            resizeDivider.setStyle("-fx-background-color: #89b4fa;");
+            e.consume();
+          } else if (!resizing[0]) {
+            container.setCursor(Cursor.DEFAULT);
+            resizeDivider.setStyle("-fx-background-color: #313244;");
+          }
+        });
+
+    container.addEventFilter(
+        MouseEvent.MOUSE_PRESSED,
+        e -> {
+          var dividerInScene = resizeDivider.localToScene(0, 0);
+          if (dividerInScene == null) return;
+          double dividerSceneY = dividerInScene.getY();
+          double dividerSceneBottom = dividerSceneY + resizeDivider.getHeight();
+          double mouseY = e.getSceneY();
+          if (mouseY >= dividerSceneY - RESIZE_ZONE
+              && mouseY <= dividerSceneBottom + RESIZE_ZONE) {
+            dragState[0] = e.getScreenY();
+            dragState[1] = inputArea.getInputHeight();
+            resizing[0] = true;
+            e.consume();
+          }
+        });
+
+    container.addEventFilter(
+        MouseEvent.MOUSE_DRAGGED,
+        e -> {
+          if (resizing[0]) {
+            double deltaY = dragState[0] - e.getScreenY();
+            inputArea.setInputHeight(dragState[1] + deltaY);
+            e.consume();
+          }
+        });
+
+    container.addEventFilter(
+        MouseEvent.MOUSE_RELEASED,
+        e -> {
+          if (resizing[0]) {
+            resizing[0] = false;
+            container.setCursor(Cursor.DEFAULT);
+            resizeDivider.setStyle("-fx-background-color: #313244;");
+            e.consume();
+          }
+        });
 
     // Clean up IPC dir when tab is closed
     setOnClosed(e -> cleanupIpcDir());

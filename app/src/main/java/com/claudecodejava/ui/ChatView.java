@@ -1,5 +1,7 @@
 package com.claudecodejava.ui;
 
+import javafx.animation.Animation;
+import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -9,6 +11,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import javafx.util.Duration;
 
 /** Scrollable chat view that displays a list of messages. */
@@ -25,8 +28,8 @@ public class ChatView extends ScrollPane {
   public ChatView() {
     markdownRenderer = new MarkdownRenderer();
     messagesBox = new VBox();
-    messagesBox.setSpacing(0);
-    messagesBox.setPadding(new Insets(8));
+    messagesBox.setSpacing(4);
+    messagesBox.setPadding(new Insets(8, 8, 30, 8));
     messagesBox.getStyleClass().add("messages-box");
 
     setContent(messagesBox);
@@ -35,16 +38,31 @@ public class ChatView extends ScrollPane {
     setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
     getStyleClass().add("chat-scroll");
 
+    // Clip the ScrollPane to its bounds so WebView native windows
+    // can't extend beyond the viewport and steal mouse events.
+    var scrollClip = new Rectangle();
+    scrollClip.widthProperty().bind(widthProperty());
+    scrollClip.heightProperty().bind(heightProperty());
+    setClip(scrollClip);
+
     overlayContainer = new StackPane(this);
     StackPane.setAlignment(this, Pos.TOP_LEFT);
     autoScrollHandler = new AutoScrollHandler(this, overlayContainer);
 
     // Welcome message
-    var welcome = new Label("Claude Code Java \u2014 Type a message to get started");
-    welcome.getStyleClass().add("welcome-label");
-    welcome.setWrapText(true);
-    welcome.setPadding(new Insets(20));
-    messagesBox.getChildren().add(welcome);
+    var welcomeBox = new VBox(8);
+    welcomeBox.setAlignment(Pos.CENTER);
+    welcomeBox.setPadding(new Insets(60, 20, 20, 20));
+    welcomeBox.getStyleClass().add("welcome-label");
+
+    var title = new Label("Claude Code");
+    title.getStyleClass().add("welcome-title");
+
+    var subtitle = new Label("Type a message to get started");
+    subtitle.getStyleClass().add("welcome-subtitle");
+
+    welcomeBox.getChildren().addAll(title, subtitle);
+    messagesBox.getChildren().add(welcomeBox);
   }
 
   /** Add a user message bubble. */
@@ -52,8 +70,11 @@ public class ChatView extends ScrollPane {
     removeWelcome();
     var cell = new MessageCell("user", text, null);
     messagesBox.getChildren().add(cell);
+    Animations.fadeIn(cell, Duration.millis(150));
     scrollToBottom();
   }
+
+  private FadeTransition thinkingPulse;
 
   /** Show animated "Claude is thinking..." indicator. */
   public void showThinkingIndicator() {
@@ -77,6 +98,14 @@ public class ChatView extends ScrollPane {
                 }));
     thinkingAnimation.setCycleCount(Timeline.INDEFINITE);
     thinkingAnimation.play();
+
+    // Pulsing opacity
+    thinkingPulse = new FadeTransition(Duration.millis(800), thinkingLabel);
+    thinkingPulse.setFromValue(0.5);
+    thinkingPulse.setToValue(1.0);
+    thinkingPulse.setCycleCount(Animation.INDEFINITE);
+    thinkingPulse.setAutoReverse(true);
+    thinkingPulse.play();
   }
 
   /** Hide the thinking indicator. */
@@ -84,6 +113,10 @@ public class ChatView extends ScrollPane {
     if (thinkingAnimation != null) {
       thinkingAnimation.stop();
       thinkingAnimation = null;
+    }
+    if (thinkingPulse != null) {
+      thinkingPulse.stop();
+      thinkingPulse = null;
     }
     if (thinkingLabel != null) {
       messagesBox.getChildren().remove(thinkingLabel);
@@ -97,6 +130,7 @@ public class ChatView extends ScrollPane {
     hideThinkingIndicator();
     currentAssistantCell = new MessageCell("assistant", "", markdownRenderer);
     messagesBox.getChildren().add(currentAssistantCell);
+    Animations.fadeIn(currentAssistantCell, Duration.millis(150));
     scrollToBottom();
   }
 
@@ -156,7 +190,7 @@ public class ChatView extends ScrollPane {
   private void removeWelcome() {
     messagesBox
         .getChildren()
-        .removeIf(node -> node instanceof Label l && l.getStyleClass().contains("welcome-label"));
+        .removeIf(node -> node.getStyleClass().contains("welcome-label"));
   }
 
   private void scrollToBottom() {
