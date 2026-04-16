@@ -322,16 +322,16 @@ public class PluginDialog {
     var toggleBtn = new Button(enabled ? "Disable" : "Enable");
     toggleBtn.getStyleClass().add("toolbar-button");
     toggleBtn.setOnAction(
-        _ -> runPluginCommand(enabled ? "disable" : "enable", name, toggleBtn));
+        _ -> runPluginCommand(enabled ? "disable" : "enable", id, toggleBtn));
 
     var updateBtn = new Button("Update");
     updateBtn.getStyleClass().add("toolbar-button");
-    updateBtn.setOnAction(_ -> runPluginCommand("update", name, updateBtn));
+    updateBtn.setOnAction(_ -> runPluginCommand("update", id, updateBtn));
 
     var uninstallBtn = new Button("Uninstall");
     uninstallBtn.getStyleClass().add("toolbar-button");
     uninstallBtn.setStyle("-fx-text-fill: #f38ba8;");
-    uninstallBtn.setOnAction(_ -> runPluginCommand("uninstall", name, uninstallBtn));
+    uninstallBtn.setOnAction(_ -> runPluginCommand("uninstall", id, uninstallBtn));
 
     var spacer = new Region();
     HBox.setHgrow(spacer, Priority.ALWAYS);

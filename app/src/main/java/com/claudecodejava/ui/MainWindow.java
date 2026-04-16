@@ -54,7 +54,10 @@ public class MainWindow extends BorderPane {
             syncSettings(tab);
             String model = toolBar.getModel();
             String effort = toolBar.getEffort();
-            tab.showSystemMessage("Settings: model=" + model + ", effort=" + effort, "system-info");
+            String mode = toolBar.getPermissionMode();
+            tab.showSystemMessage(
+                "Settings: model=" + model + ", effort=" + effort + ", mode=" + mode,
+                "system-info");
           }
         });
 
