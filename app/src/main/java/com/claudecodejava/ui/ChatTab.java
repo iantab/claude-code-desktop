@@ -24,8 +24,8 @@ import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 
 /** A single chat tab with its own session, chat view, input area, and status bar. */
 public class ChatTab extends Tab {
@@ -125,8 +125,7 @@ public class ChatTab extends Tab {
           double dividerSceneY = dividerInScene.getY();
           double dividerSceneBottom = dividerSceneY + resizeDivider.getHeight();
           double mouseY = e.getSceneY();
-          if (mouseY >= dividerSceneY - RESIZE_ZONE
-              && mouseY <= dividerSceneBottom + RESIZE_ZONE) {
+          if (mouseY >= dividerSceneY - RESIZE_ZONE && mouseY <= dividerSceneBottom + RESIZE_ZONE) {
             container.setCursor(Cursor.N_RESIZE);
             resizeDivider.setStyle("-fx-background-color: #89b4fa;");
             e.consume();
@@ -144,8 +143,7 @@ public class ChatTab extends Tab {
           double dividerSceneY = dividerInScene.getY();
           double dividerSceneBottom = dividerSceneY + resizeDivider.getHeight();
           double mouseY = e.getSceneY();
-          if (mouseY >= dividerSceneY - RESIZE_ZONE
-              && mouseY <= dividerSceneBottom + RESIZE_ZONE) {
+          if (mouseY >= dividerSceneY - RESIZE_ZONE && mouseY <= dividerSceneBottom + RESIZE_ZONE) {
             dragState[0] = e.getScreenY();
             dragState[1] = inputArea.getInputHeight();
             resizing[0] = true;
@@ -253,8 +251,6 @@ public class ChatTab extends Tab {
     chatView.clear();
     setText(directoryBasename(directory));
   }
-
-
 
   public List<StreamEvent.McpServer> getLastMcpServers() {
     return lastMcpServers;
@@ -493,7 +489,6 @@ public class ChatTab extends Tab {
     chatView.addSystemMessage("Cancelled", "system-info");
   }
 
-
   private void setupIpcFiles() {
     try {
       Files.createDirectories(ipcDir);
@@ -568,7 +563,10 @@ public class ChatTab extends Tab {
       if (Files.exists(ipcDir)) {
         try (var walk = Files.walk(ipcDir)) {
           walk.sorted(java.util.Comparator.reverseOrder())
-              .forEach(p -> { var _ = p.toFile().delete(); });
+              .forEach(
+                  p -> {
+                    var _ = p.toFile().delete();
+                  });
         }
       }
     } catch (Exception ignored) {

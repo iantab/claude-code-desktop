@@ -200,5 +200,4 @@ public class SessionHistoryView extends ScrollPane {
 
     return messages;
   }
-
 }

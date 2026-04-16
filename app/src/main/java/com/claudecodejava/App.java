@@ -24,5 +24,4 @@ public class App extends Application {
 
     mainWindow.focusInput();
   }
-
 }

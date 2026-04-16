@@ -256,5 +256,4 @@ public class ToolBar extends HBox {
       }
     }
   }
-
 }

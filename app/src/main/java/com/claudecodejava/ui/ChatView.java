@@ -188,9 +188,7 @@ public class ChatView extends ScrollPane {
   }
 
   private void removeWelcome() {
-    messagesBox
-        .getChildren()
-        .removeIf(node -> node.getStyleClass().contains("welcome-label"));
+    messagesBox.getChildren().removeIf(node -> node.getStyleClass().contains("welcome-label"));
   }
 
   private void scrollToBottom() {
