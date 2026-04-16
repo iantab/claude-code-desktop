@@ -13,7 +13,8 @@ public class App extends Application {
     var mainWindow = new MainWindow(initialDir);
 
     var scene = new Scene(mainWindow, 1100, 750);
-    scene.getStylesheets().add(getClass().getResource("dark-theme.css").toExternalForm());
+    var css = getClass().getResource("dark-theme.css");
+    if (css != null) scene.getStylesheets().add(css.toExternalForm());
 
     mainWindow.setupKeyboardShortcuts();
 
@@ -24,7 +25,7 @@ public class App extends Application {
     mainWindow.focusInput();
   }
 
-  static void main(String[] args) {
+  public static void main(String[] args) {
     launch(args);
   }
 }

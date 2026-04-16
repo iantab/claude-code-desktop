@@ -416,7 +416,7 @@ public class ChatTab extends Tab {
           inputArea.setBusy(false);
           assistantStarted = false;
           chatView.addQuestionView(
-              QuestionView.forPlanApproval(this::handleSend, () -> inputArea.focus()));
+              QuestionView.forPlanApproval(this::handleSend, inputArea::focus));
         }
       }
 
